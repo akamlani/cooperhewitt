@@ -17,7 +17,17 @@ the visitors, understanding the behavioral patterns and tastes would be a value-
 
 ## Cooper Hewitt Data Sources
 - [De-identified Pen Data](https://github.com/cooperhewitt/the-pen-data/)
+    - The museum provides a digital pen to each visitor upon entry to tag artwork they are interested in.  
+    In addition they can use the pen to draw shapes that are most similar to these artworks at select stations,
+    which will bring up the associated artwork metadata at the station.  Each time the pen tags an object (artwork);
+    it is recorded with a timestamp.  All this data is de-identified data recorded as “bundles”.
+
 - [Collection Metadata](https://collection.cooperhewitt.org/api/methods/)
+    - Object artwork metadata has been exposed through restful API’s via multiple endpoints.  Curators have
+    digitized object metadata where available; therefore not all metadata may be available for a particular artwork,
+    nor normalized in any format.  This metadata will provide additional features and context to the object being
+    tagged.  Included in this metadata, are the locations (rooms, spots) where artwork has appeared.
+
 
 ## Configuration (API Keys)
 - Fill in the appropriate sections in config/api_cred.yml based on registration with Cooper Hewitt.
