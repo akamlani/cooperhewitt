@@ -1,5 +1,5 @@
 import pandas as pd
-
+import pickle 
 import ch_pen as chp
 import ch_collections as chc
 import databases
@@ -29,6 +29,11 @@ json_record_seq.to_pickle(export_path + "exhibition_objects.pkl")
 db = databases.Database()
 db.insert_records(json_record_seq, 'exhibition')
 
+# insert into database wo/retrieval
+json_record_seq = pd.read_pickle(export_path + "exhibition_objects.pkl")
+db = databases.Database()
+db.insert_records(list(json_record_seq), 'exhibition')
+  
 # transform exhibitions
 conv_dt = lambda x: pd.to_datetime(x, format='%Y-%m-%d')
 def transform_exhibitions(df_exhibitions_in):
@@ -50,3 +55,5 @@ df_exhibitions = transform_exhibitions(df_exhibitions_acquired)
 pen = chp.Pen()
 pen.transform_raw_data(export_path + "pen-collected-items.csv")
 pen.feature_engineer(df_exhibitions)
+
+
