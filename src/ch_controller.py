@@ -1,43 +1,28 @@
+import operator
+import numpy as np
 import pandas as pd
-import multiprocessing
+pd.set_option('display.max_columns', 75)
+
 import ch_pen as chp
+import ch_spark as chs
 import ch_collections as chc
+import ch_metaobjects as chm
+
 import databases
 import graphs
-import utils
-
 
 export_path = "./../export/"
 df_objects  = pd.read_pickle(export_path + "collection_objects.pkl")
-tr = utils.Transforms()
 
-# acquire data
-museum = chc.Museum()
-site_json  = museum.site_information()
-df_departments = museum.site_departments()
-df_exhibitions_acquired = museum.site_exhibitions()
-
-# transform exhibitions
-conv_dt = lambda x: pd.to_datetime(x, format='%Y-%m-%d')
-def transform_exhibitions(df_exhibitions_in):
-    # Format Exhibitions
-    # There are some dates that do not have an end-date, it is unclear if this is an ongoing active exhibition
-    df_exhibitions_in = df_exhibitions_in[df_exhibitions_in.date_end != "0000-00-00"]
-    df_exhibitions_in.is_copy = False
-    df_exhibitions_in['created.date_end']   = df_exhibitions_in['date_end'].apply(conv_dt)
-    df_exhibitions_in['created.date_start'] = df_exhibitions_in['date_start'].apply(conv_dt)
-    df_exhibitions_in['created.time_span']  = \
-    df_exhibitions_in['created.date_end'] - df_exhibitions_in['created.date_start']
-    return df_exhibitions_in
-df_exhibitions = transform_exhibitions(df_exhibitions_acquired)
-
-# pen data
-pen = chp.Pen()
-pen.transform_raw_data(export_path + "pen_collected_items.csv")
-pen.feature_engineer(df_exhibitions)
-
-# handle the custom features
-df_locations = tr.transform_locations(df_objects)
-pen.custom_features(df_locations)
-
-# 
+# debug location information
+frame = {room_id: int(list(df_locations[df_locations['room_id'] == room_id]['room_count_objects'].unique())[0])
+         for room_id in df_locations['room_id'].unique() }
+frame = {spot_id: int(list(df_locations[df_locations['spot_id'] == spot_id]['spot_count_objects'].unique())[0])
+         for spot_id in df_locations['spot_id'].unique() }
+frame_sorted = sorted(frame.items(), key=operator.itemgetter(1), reverse=True)
+print len(df_locations['room_id'].unique())                 #21
+print len(df_locations['spot_id'].unique())                 #891
+print len(df_locations['room_floor'].unique())              #4
+print max(df_locations['room_count_objects'].astype(int))   #1, 45473
+print max(df_locations['room_count_spots'].astype(int))     #1, 406
+print max(df_locations['spot_count_objects'].astype(int))   #1, 2248

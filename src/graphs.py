@@ -32,12 +32,7 @@ class GraphConn(object):
         self.nx_dag_pr = nx.pagerank(self.nx_dag)
         self.nx_dag_prs = sorted(self.nx_dag_pr.items(), key=operator.itemgetter(1), reverse=True)
 
-
     def metrics(self):
         return {'num nodes': self.nx_dag.number_of_nodes(),
                 'num edges': self.nx_dag.number_of_edges(),
                 'num degrees': self.nx_dag.degree() }
-
-
-
-

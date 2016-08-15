@@ -4,7 +4,7 @@ import boto
 
 class AwsConn(object):
     def __init__(self):
-        self.export_path = './../export/' 
+        self.export_path = './../export/'
         self.access_key = os.environ['AWS_ACCESS_KEY_ID']
         self.secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
         self.conn = boto.connect_s3(self.access_key, self.secret_access_key)
@@ -38,7 +38,9 @@ res = {"collection_objects": ('collection_objects.pkl', 'pkl'),
        "exhibitions":        ('exhibitions.pkl', 'pkl'),
        "pen":                ('pen_collected_items.csv', 'csv'),
        "pen_tr_raw":         ('pen_transformed_raw.pkl', 'pkl'),
-       "pen_tr_features":    ('pen_transformed_features.pkl', 'pkl')}
+       "pen_tr_features":    ('pen_transformed_features.pkl', 'pkl'),
+       "temporal_loc":       ('temporal_locations.pkl', 'pkl'),
+       "temporal_exh":       ('temporal_exhibitions.pkl', 'pkl'),
+       "spark_meta":         ('penmeta_spark.pkl', 'pkl')}
 
 file_res = {k: aws.create_resource(file) for k, (file, file_type) in res.iteritems() }
-

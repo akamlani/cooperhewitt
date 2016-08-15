@@ -7,13 +7,13 @@ import pandas as pd
 
 
 class Museum(object):
-    
+
     def __init__(self):
         self.url = self.create_url()
         credentials = yaml.load(open('./../config/api_cred.yml'))
         self.api_key = credentials['cooperhewitt_key']
         self.access_token = credentials['cooperhewitt_token']
-    
+
     def create_url(self):
         hostname = 'api.collection.cooperhewitt.org'
         endpoint = '/rest'
@@ -56,7 +56,7 @@ class Museum(object):
             print "Initial Page Request: Response={0}, Args={1}" \
                 .format(response.status_code, args['tag_id'] if 'tag_id' in args else {})
             return pd.DataFrame()
-        
+
         if( (rsp_json['stat'] == u'ok') and (int(rsp_json['pages']) > 1) ):
             max_records  = int(rsp_json[u'total'])
             max_pages    = int(rsp_json[u'pages'])
@@ -112,10 +112,22 @@ class Museum(object):
             records[kw] = rsp_json[kw]
         return records
 
+    def site_rooms(self):
+        req_method = 'cooperhewitt.objects.locations.rooms.getList'
+        rsp = self._execute(req_method, {})
+        rsp_json = json.loads(rsp.text)
+        num_rooms = rsp_json['total']
+        df_rooms = pd.DataFrame(rsp_json['rooms']['room'])
+        self.df_room_info = df_rooms[['id', 'name', 'floor', 'count_objects', 'count_spots']]
+        return self.df_room_info
+
+    def site_spots(self):
+        req_method = 'cooperhewitt.objects.locations.spots.getList'
+        rsp_json = self._execute_pages(req_method, {}, u'spots.spot')
+        return rsp_json
 
 
-
-
-
-
-
+    def site_types(self):
+        req_method = 'cooperhewitt.types.getList'
+        df_types = self._execute_pages(req_method, {}, u'types')
+        return df_types

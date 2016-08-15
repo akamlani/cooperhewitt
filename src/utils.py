@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 import math
 
+
+conv_dt = lambda x: pd.to_datetime(x, format='%Y-%m-%d')
 class Utils(object):
     def __init__(self):
         pass
-    
+
     def save_json_tofile(data_json, filename):
         with open("./../export/"+filename, 'w') as f:
             print "file api: results type", type(data_json)
@@ -28,35 +30,37 @@ class Utils(object):
 class Transforms(object):
     def __init__(self):
         pass
-    
+
     def transform_locations(self, df_objects_in):
-        # location data normalization (object id, location data)
+        # location data normalization (object id, location data), as information is nested in object store per id
         df_objid_loc = df_objects_in[['id', 'location_visit']]
         df_objid_loc = df_objid_loc.rename(columns={'id':'refers_to_object_id'}, inplace=False)
         df_objid_loc.refers_to_object_id = df_objid_loc.refers_to_object_id.astype(long)
         df_objid_loc = pd.concat([df_objid_loc.refers_to_object_id,
         pd.io.json.json_normalize( df_objid_loc.location_visit )],axis=1 )
         df_objid_loc = df_objid_loc.rename(columns={'id':'location_id'}, inplace=False)
+        df_objid_loc['visit_raw']   = df_objid_loc['visit_time']
         df_objid_loc['visit_time']  = pd.to_datetime(df_objid_loc['visit_time'], unit='s')
         df_objid_loc['visit_date']  = (df_objid_loc['visit_time'].dt.date).astype(np.datetime64)
         return df_objid_loc
 
     def imputate(self, frame):
         # if objects are not in the metastore, we just set ambiguous large values to indicate test set
-        cols = ['room.floor', 'room.id', 'room.count_objects', 'room.count_spots',
-                'spot.id', 'spot.count_objects']
-        cond = (frame.meta_store == 0) & (frame['room.floor'].isnull())
+        cols = ['room_floor', 'room_id', 'room_count_objects', 'room_count_spots', 'spot_id', 'spot_count_objects']
+        cond = (frame.meta_store == 0) & (frame['room_floor'].isnull())
         frame.loc[cond, cols] = -9999
         return frame
-    
 
     def acquire_location_at_tag(self, el, df_locations_sub_in):
         # input is the input element pen tag observation and the locations metadata
         # look up the appropriate object id in the location table
         elements = df_locations_sub_in[df_locations_sub_in.refers_to_object_id == el.refers_to_object_id]
+
         # find the possible dates for this object for different locations
         location_dates = elements.visit_date.drop_duplicates()
-        nearest_dates = location_dates.apply(lambda x: abs(x - el['created.date.est']) ).sort_values()
+        nearest_dates = location_dates.apply(lambda x: abs(x - el['created_date_est']) ).sort_values()
+
+
         # there may be some object ids that are not in the meta store
         dp = dict(el)
         dp['meta_store'] = 0
@@ -64,9 +68,8 @@ class Transforms(object):
             nearest_date_entry  = elements.ix[nearest_dates.index[0], :]
             # subset the appropriate columns
             cols = ['refers_to_object_id',
-                    'room.id', 'room.name', 'room.count_objects', 'room.count_spots',
-                    'room.floor', 'room.floor_name',
-                    'spot.id', 'spot.name', 'spot.description', 'spot.count_objects']
+                    'room_floor', 'room_id', 'room_count_objects', 'room_count_spots',
+                    'spot_id', 'spot_count_objects']
             date_entry = nearest_date_entry[cols]
             # converge into a single series
             dp['meta_store'] = 1
@@ -88,11 +91,5 @@ class Transforms(object):
             max_ts_mva = -1.0
             bursty     = 0
 
-        seq = {'ntags': cnt, 'mva':max_ts_mva, 'bursty': (1 if max_ts_mva > threshold else 0) }
+        seq = {'ntags': cnt, 'mva': max_ts_mva, 'bursty': (1 if max_ts_mva > threshold else 0) }
         return pd.Series(seq)
-
-
-
-
-
-

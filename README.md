@@ -31,13 +31,21 @@ As part of the behavior patterns, the following can be determined:
 - Are similar artworks not part of an exhibition getting attention
 - Are certain Locations {Rooms, Spots, Floors} being visited and is their a pattern to them
 - Can visitors be classified into groups based on their tagging behavior and what they tag
+- Are there better arrangements of the stations and artwork
 
 The primary goal is to understand how the visitors are interacting with the museum so that
 the experience can be further improved.  In addition, a lot of effort goes into planning exhibitions,
 exhibition planning can be further improved by understanding the visitor patterns.
 
 ## Exploratory Analysis
-- TBD
+Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.
+
+![PEN EDA](plots/pen_eda.png)
+
+
+<br>
+An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
+![PEN HEATMAP](plots/heatmap.png)
 
 ## Cooper Hewitt Data Sources
 - [De-identified Pen Data](https://github.com/cooperhewitt/the-pen-data/)
@@ -69,10 +77,8 @@ exhibition planning can be further improved by understanding the visitor pattern
 ## Libraries/Components
 - AWS: EC2, S3
 - Spark (pyspark):  Spark SQL, MLLib, GraphX/GraphFrames
-- Core Python Libraries: networkx, boto, pymongo, sklearn, pandas, numpy, seaborn/matplotlib  
+- Core Python Libraries: igraph, networkx, boto, pymongo, sklearn, pandas, numpy, seaborn/matplotlib  
 
-## Metrics
-- [TBD]
 
 ## Cooper Hewitt Resources
 - [Cooper Hewitt Labs](http://labs.cooperhewitt.org)
@@ -80,3 +86,6 @@ exhibition planning can be further improved by understanding the visitor pattern
 - Articles
     - [Citizen Curation](http://tfmorris.blogspot.com/2012/10/citizen-curation-of-smithsonian-metadata.html)
     - [Happy Birthday for the Pen](http://labs.cooperhewitt.org/2016/a-very-happy-open-birthday-for-the-pen/)
+
+## Additional Resources
+- [Hierarchical Clustering](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/)
