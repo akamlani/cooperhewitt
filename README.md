@@ -1,6 +1,6 @@
 # Cooper Hewitt
-For many years, approximately four years, the Cooper Hewitt design museum was closed while it
-underwent a transformation.  During this time they overhauled their technology to create
+For many years, approximately 3-4 years, the Cooper Hewitt design museum was closed while it
+underwent a renovation.  During this time they overhauled their technology to create
 an immersive experience for the visitor, whereby visitors would interact with the technology.  During this
 time "The Pen" was born which allowed the museum to track which artworks (objects) were being interacted with via
 recorded timestamps and artwork identifiers.  Visitors can tag artworks of the museum or created designs of
@@ -40,12 +40,16 @@ exhibition planning can be further improved by understanding the visitor pattern
 ## Exploratory Analysis
 Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.
 
-![PEN EDA](plots/pen_eda.png)
-
+![PEN EDA](plots/pen_eda_full.png)
 
 <br>
 An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
 ![PEN HEATMAP](plots/heatmap.png)
+
+<br>
+Top Communities from Spark GraphX processing via plotting of iGraph.
+![COMMUNITY DETECTION](plots/communities.png)
+You can view an interactive diagram [here](https://plot.ly/~akamlani/84/artwork/), where hovering shows the type of art.
 
 ## Cooper Hewitt Data Sources
 - [De-identified Pen Data](https://github.com/cooperhewitt/the-pen-data/)
@@ -65,14 +69,8 @@ An analysis based on feature engineering from aggregating Pen data and the Colle
 - Fill in the appropriate sections in config/api_cred.yml based on registration with Cooper Hewitt.
 
 ## Data (Transformed)
-- collection_objects {.csv, .tsv, .pkl}
-    - Represents some of the metadata about a given artwork
-- exhibitions {.csv, .pkl}
-    - Represents when an exhibition took place
-- exhibition_objects {.json, .pkl}
-    - Represents which objects are associated with an exhibition (not directly associated w/pen data timestamps)
-- pen_collected_items {.csv, original}
-    - De-identified Tracked Pen data for a particular visitor
+- collection_objects: Metadata about particular artworks and locations within the museum
+- pen_collected_items: De-identified Tracked Pen data for a particular visitor
 
 ## Libraries/Components
 - AWS: EC2, S3
