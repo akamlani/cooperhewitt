@@ -40,15 +40,16 @@ exhibition planning can be further improved by understanding the visitor pattern
 ## Exploratory Analysis
 Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.
 
-![PEN EDA](plots/pen_eda_full.png)
+![PEN EDA](plots/pen_eda_full_sm.png)
 
 <br>
 An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
-![PEN HEATMAP](plots/heatmap.png)
+![PEN HEATMAP](plots/heatmap_sm.png)
 
 <br>
 Top Communities from Spark GraphX processing via plotting of iGraph.
-![COMMUNITY DETECTION](plots/communities.png)
+![COMMUNITY DETECTION](plots/communities_sm.png)
+
 You can view an interactive diagram [here](https://plot.ly/~akamlani/84/artwork/), where hovering shows the type of art.
 
 ## Cooper Hewitt Data Sources

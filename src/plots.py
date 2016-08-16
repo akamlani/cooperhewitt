@@ -30,8 +30,8 @@ class Display(object):
                 ax.plot(param_i['frame'].index, param_i['frame'])
 
             y_label = param_i['ylabel'] + " (" +  param_i.get('transform') + ")" if param_i.get('transform') else param_i['ylabel']
-            ax.set_ylabel(y_label)
-            ax.set_xlabel(param_i['xlabel'])
+            ax.set_ylabel(y_label, fontweight='bold')
+            ax.set_xlabel(param_i['xlabel'], fontweight='bold')
             if param_i.get('title'): ax.set_title(param_i.get('title'))
             if param_i.get('rot'):
                 for item in ax.get_xticklabels(): item.set_rotation(param_i.get('rot'))
@@ -41,6 +41,10 @@ class Display(object):
             if param_i.get('labels'):
                 items = param_i.get('labels')
             ax.tick_params(axis='y', which='major', pad=15)
+
+            for tick in ax.xaxis.get_major_ticks():
+                tick.label.set_fontsize(13)
+                tick.label.set_fontweight('bold')
 
         #fig.delaxes(fig.axes[nrows*ncols-1])
         plt.subplots_adjust(bottom=0.05)
