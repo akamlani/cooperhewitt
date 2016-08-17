@@ -34,21 +34,20 @@ can be further improved by understanding the visitor patterns.
 ## Exploratory Analysis
 Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.
 <p align="center">
-![PEN EDA](plots/pen_eda_full.png)
+<img src="plots/pen_eda_full.png">
 </p>
 
 <br>
 An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
 <p align="center">
-![PEN HEATMAP](plots/heatmap_sm.png)
+<img src="plots/heatmap_sm.png">
 </p>
 
 <br>
 Top Communities from Spark GraphX processing via plotting of iGraph.
 <p align="center">
-![COMMUNITY DETECTION](plots/communities_sm.png)
+<img src="plots/communities_sm.png">
 </p>
-
 You can view an interactive diagram [here](https://plot.ly/~akamlani/84/artwork/), where hovering shows the type of art.
 
 ## Cooper Hewitt Data Sources
