@@ -40,7 +40,7 @@ exhibition planning can be further improved by understanding the visitor pattern
 ## Exploratory Analysis
 Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.
 
-![PEN EDA](plots/pen_eda_full_sm.png)
+![PEN EDA](plots/pen_eda_full.png)
 
 <br>
 An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
