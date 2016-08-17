@@ -16,8 +16,13 @@ export_path = "./../export/"
 # save object collection to files for later use
 museum = chc.Museum()
 df_objects  = museum.site_objects()
+df_objects.id = df_objects.id.astype(int)
 df_objects.to_csv(export_path + "collection_objects.csv", encoding='utf-8')
 df_objects.to_csv(export_path + "collection_objects.tsv", encoding='utf-8', sep='\t')
+df_objects.to_pickle(export_path + "collection_objects.pkl")
+
+
+
 
 # request objects via exhibitions
 def objects_per_exhibition(df_exhibitions_in):
