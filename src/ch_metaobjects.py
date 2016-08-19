@@ -4,6 +4,7 @@ import utils
 import ch_collections as chc
 from sklearn.metrics import pairwise
 
+
 class MetaObjectStore(object):
     def __init__(self):
         self.export_path = "./../export/"
@@ -12,13 +13,21 @@ class MetaObjectStore(object):
         self.museum = chc.Museum()
         self.df_objects     = pd.read_pickle(self.export_path + "collection_objects.pkl")
         self.df_locations   = pd.read_pickle(self.export_path + "temporal_locations.pkl")
-        #self.df_exhibitions = pd.read_pickle(self.export_path + "temporal_e.pkl")
+        self.df_exhibitions = pd.read_pickle(self.export_path + "temporal_exhibitions.pkl")
+        self.df_rooms_table = pd.read_pickle(self.export_path + "rooms_table.pkl")
+        self.df_objects_locttypes = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
 
     def attach_meta(self):
         # request data
         self.site_json  = self.museum.site_information()
         self.df_departments = self.museum.site_departments()
         self.df_exhibitions_acquired = self.museum.site_exhibitions()
+        self.df_site_spots = self.museum.site_spots()
+        self.df_site_rooms = self.museum.site_rooms()
+        self.df_site_rooms.count_spots   = self.df_site_rooms.count_spots.astype(int)
+        self.df_site_rooms.count_objects = self.df_site_rooms.count_objects.astype(int)
+        # lookup tables
+        self.build_temporal_lookups()
         # location and exhibition data is temporal dependent, not static
         self.df_locations     = self.clean_temporal_data()
         self.df_locations.to_pickle(self.export_path +   "temporal_locations.pkl")
@@ -29,6 +38,25 @@ class MetaObjectStore(object):
         self.df_objects_meta  = self.df_objects.rename(columns={'id':'refers_to_object_id'})
         #cols = filter(lambda x: self.df_objects_meta[x].dtype == np.dtype('O'), self.df_objects_meta.columns)
         #self.df_objects_meta[cols] = self.df_objects_meta[cols].astype(long)
+
+
+    def build_temporal_lookups(self):
+        # acquire descriptions of rooms [id, room_name, floor, room_count_objects, count_spots, description]
+        self.df_site_spots['room_name'] = self.df_site_spots.apply(self.tr.extract_roomname, axis=1)
+        df_rooms = self.df_site_rooms.rename(columns={'count_objects': 'room_count_objects'})
+        df_rooms.id = df_rooms.id.astype(int)
+        df_rooms['description'] = \
+        df_rooms.apply(lambda row: self.df_site_spots[self.df_site_spots.room_name == row['name']]['description'].values[0],axis=1)
+        df_rooms = df_rooms.sort_values(by=['room_count_objects', 'count_spots'], ascending=False)
+        self.df_rooms_table = df_rooms
+        self.df_rooms_table.to_pickle(self.export_path + "rooms_table.pkl")
+        # acquire descriptions of types per given room [id, type, room.id, room.name, room.floor, spot.id]
+        df_objects_loctypes = self.df_objects[['id', 'type', 'location_visit']]
+        df_objects_loctypes[['room.id', 'room.name', 'room.floor', 'spot.id']] = \
+        pd.io.json.json_normalize(df_objects_loctypes.location_visit)[['room.id', 'room.name', 'room.floor', 'spot.id']]
+        df_objects_loctypes = df_objects_loctypes.drop('location_visit', axis=1)
+        self.df_objects_locttypes = df_objects_loctypes
+        self.df_objects_locttypes.to_pickle(self.export_path + "object_roomtypes_table.pkl")
 
     def clean_temporal_data(self):
         # location data has temporal data that is duplicated and should not be existent
@@ -63,3 +91,27 @@ class MetaObjectStore(object):
         matrix = self.df_objects_meta.copy()
         matrix = matrix.set_index('refers_to_object_id')
         self.object_cos_sim = pairwise.cosine_similarity(matrix)
+
+
+    def debug_room_types():
+        # what types of artwork are associated with rooms
+
+        # Drawings: 205, 202, 105, 206, 201
+        # Prints:   205, 202, 201, 203, 105, 206, 302, 107
+        # Textiles: 202, 206, 205, 105
+        # Concept Art: 103
+        # Staircase Mode: 105,212
+        export_path = "./../export/"
+        loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")
+        cols = ['Drawing', 'Print', 'Concept art', 'textile', 'Staircase model']
+        for col in cols:
+            print col
+            print loctype_table[loctype_table.type == col]['room.name'].value_counts()[:10]
+
+    def debug_room_types(room_name):
+        # what types of artwork are associated with a room
+        export_path = "./../export/"
+        loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")
+
+        print room_name
+        loctype_table[loctype_table['room.name'] == room_name]['type'].value_counts()

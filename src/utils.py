@@ -51,31 +51,18 @@ class Transforms(object):
         frame.loc[cond, cols] = -9999
         return frame
 
-    def acquire_location_at_tag(self, el, df_locations_sub_in):
-        # input is the input element pen tag observation and the locations metadata
-        # look up the appropriate object id in the location table
-        elements = df_locations_sub_in[df_locations_sub_in.refers_to_object_id == el.refers_to_object_id]
+    def extract_roomname(self, row):
+        # from the name field of a site_spots extract the given room so we can gather a description
+        name = map(lambda s: s.strip() , row['name'].split(','))
+        room = filter(lambda x: x.isdigit(), name)
+        return str(room[0]) if len(room) > 0 else name[-1]
 
-        # find the possible dates for this object for different locations
-        location_dates = elements.visit_date.drop_duplicates()
-        nearest_dates = location_dates.apply(lambda x: abs(x - el['created_date_est']) ).sort_values()
-
-
-        # there may be some object ids that are not in the meta store
-        dp = dict(el)
-        dp['meta_store'] = 0
-        if location_dates.shape[0] > 0:
-            nearest_date_entry  = elements.ix[nearest_dates.index[0], :]
-            # subset the appropriate columns
-            cols = ['refers_to_object_id',
-                    'room_floor', 'room_id', 'room_count_objects', 'room_count_spots',
-                    'spot_id', 'spot_count_objects']
-            date_entry = nearest_date_entry[cols]
-            # converge into a single series
-            dp['meta_store'] = 1
-            dp.update(date_entry.to_dict())
-        return pd.Series(dp)
-
+    def rename_rooms(self, frame, mapping_frame):
+        # rename rooms according to prefix
+        rooms = [s.strip('room_') for s in frame.columns if s.startswith('room') and 'cap' not in s and 'nometa' not in s]
+        room_map = {'room_'+rm: 'rm_' + mapping_frame[mapping_frame['id'] == int(rm)].name.values[0] \
+                    for rm in rooms if '9999' not in rm}
+        return rooms, room_map
 
     def estimate_bursty_bundle(self, bundle_seq, threshold):
         # bursty cycles according to moving average of a bundle

@@ -113,8 +113,7 @@ class Pen(object):
         self.df_wallobjects  = self.df_pen[self.df_pen['tool_id'] == 0]
         self.df_pen.loc[:, 'visitor_drawn'] = (self.df_pen['tool_id'] != 0).astype(int)
         # Tag Information (Temporal Locations)
-        # is the visit_date during the same time as when the tag occurs
-        # self.df_pen = TBD self.df_pen.apply(lambda el: self.tr.acquire_location_at_tag(el, df_locations_in), axis=1)
+        # TBD: SPARK LOCATION DATA
 
         # Bursty Time Periods (Burstiness)
         # This should be dealt with for a particular bundle indication of the type of visitor

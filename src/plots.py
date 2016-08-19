@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from   matplotlib import rcParams
+
 import seaborn as sns
 sns.set_style("darkgrid")
 sns.set_context("talk")
@@ -79,12 +81,22 @@ class Display(object):
         py.image.save_as(fig, filename=filename)
         return fig
 
+    def plot_heatmap(self, frame, filename):
+        # Features correlation (what rooms are highly correlated with location )
+        fig = plt.figure(figsize=(10,8))
+        pd.set_option('display.max.rows',75)
+        sns.heatmap(frame, square=True)
+        # formatting
+        plt.rc('font', weight='bold')
+        plt.gca().xaxis.tick_top()
+        plt.gca().invert_yaxis()
+        for item in plt.gca().get_xticklabels(): item.set_rotation(90)
+        for tick in plt.gca().xaxis.get_major_ticks(): tick.label.set_fontsize(14)
+        for tick in plt.gca().yaxis.get_major_ticks(): tick.label.set_fontsize(14)
+        rcParams.update({'figure.autolayout': True})
+        fig.savefig(filename, dpi=400)
 
 
 
-
-
-
-# create subplots based on passed in data configuration
 # sns.palplot(sns.color_palette())
 # https://stanford.edu/~mwaskom/software/seaborn/tutorial/color_palettes.html#palette-tutorial

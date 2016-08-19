@@ -1,4 +1,7 @@
+from __future__ import division
 import numpy as np
+import pandas as pd
+
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import scale
@@ -19,6 +22,8 @@ sns.set_style("darkgrid")
 sns.set_context("talk")
 sns.set_palette("husl")
 
+import utils
+import ch_collections as chc
 
 def execute_PCA(features, n_comp):
     X_centered = scale(features)
@@ -113,6 +118,14 @@ def plot_clusters(df_features):
     plt.scatter(x=features_pca[:,0], y=features_pca[:,1], c=km.labels_)
     plt.plot(centroids[:,0],centroids[:,1],'sg',markersize=8)
 
+### correlations
+def calc_correlations(frame, threshold, cols, target):
+    # find the most given correlations for a given target on a subset of columns
+    df_corr = frame.corr(method='pearson')[target].sort_values(ascending=False)
+    df_tier_cols = list(df_corr[df_corr > threshold].index)
+    cols = list( set(cols + df_tier_cols) )
+    df_subset_corr = frame[cols].corr(method='pearson')
+    return df_subset_corr
 
 ### hierarchical_clustering
 def execute_hierarchical_clustering(data):
@@ -123,9 +136,9 @@ def execute_hierarchical_clustering(data):
     c, coph_dists = cophenet(Z, pdist(data))
     print "coph distance metric evaluation", c
     clusters = fcluster(Z, t=cutoff, criterion='distance')
-    return Z, cutoff
+    return Z, cutoff, clusters
 
-def plot_dendrogram(Z, cutoff):
+def plot_dendrogram(Z, cutoff, filename):
     fig = plt.figure(figsize=(8,8))
     set_link_color_palette(["#B061FF", "#61ffff"])
     dendro  = dendrogram(Z,
@@ -150,4 +163,17 @@ def plot_dendrogram(Z, cutoff):
     for tick in plt.gca().yaxis.get_major_ticks():
                     tick.label.set_fontsize(12)
                     tick.label.set_fontweight('bold')
-    fig.savefig('../plots/dendrogram.png', dpi=100, bbox_inches="tight")
+    fig.savefig(filename, dpi=100, bbox_inches="tight")
+
+def debug_clusters(frame, col='during_exhibition'):
+    # look at the correlation across each cluster to a given target column
+    export_path = "./../export/"
+    tr = utils.Transforms()
+    rooms_table = pd.read_pickle(export_path + "rooms_table.pkl")
+    cluster_labels = sorted(frame.cluster.unique())
+    for label in (cluster_labels):
+        sliced = frame[frame.cluster == label]
+        sliced = sliced.rename(columns=tr.rename_rooms(sliced, rooms_table)[1])
+        print "Cluster Label:{0}, Pct Sample Obs:{1}".format(label, sliced.shape[0]/frame.shape[0] )
+        print sliced.corr()[col].sort_values(ascending=False)[:10]
+        print
