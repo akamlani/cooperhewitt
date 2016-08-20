@@ -10,7 +10,6 @@ in de-identified bundles to protect the privacy of the visitors.
 So why do visitors tag objects in the first place?  As part of the museum experience, all artwork visitors tag or create
 can be visited online via their account.  Therefore they have a vested interest in them tagging.
 
-
 ## Project Description
 Aggregating the Pen data and Collection metadata (metadata about an artwork) can give further insights
 into how the museum is effectively using their assets and resources, notably "The Pen" and how exhibitions
@@ -30,6 +29,8 @@ We will look at a few of the visitor behavior patterns:
 The primary goal is to understand how the visitors are interacting with the museum so that the experience
 can be further improved.  In addition, a lot of effort goes into planning exhibitions, exhibition planning
 can be further improved by understanding the visitor patterns.
+
+For a further breakdown please review the [slide deck](docs/CooperHewitt.pdf).
 
 ## Exploratory Analysis
 Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.

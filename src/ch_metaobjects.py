@@ -11,29 +11,32 @@ class MetaObjectStore(object):
         self.tr = utils.Transforms()
         self.util = utils.Utils()
         self.museum = chc.Museum()
-        self.df_objects     = pd.read_pickle(self.export_path + "collection_objects.pkl")
-        self.df_locations   = pd.read_pickle(self.export_path + "temporal_locations.pkl")
-        self.df_exhibitions = pd.read_pickle(self.export_path + "temporal_exhibitions.pkl")
-        self.df_rooms_table = pd.read_pickle(self.export_path + "rooms_table.pkl")
-        self.df_objects_locttypes = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
+        self.df_objects      = pd.read_pickle(self.export_path + "collection_objects.pkl")
+        self.df_departments  = pd.read_pickle(self.export_path + "departments.pkl")
+        self.df_locations    = pd.read_pickle(self.export_path + "temporal_locations.pkl")
+        self.df_exhibitions  = pd.read_pickle(self.export_path + "temporal_exhibitions.pkl")
+        self.df_rooms_table  = pd.read_pickle(self.export_path + "rooms_table.pkl")
+        self.df_objects_loctypes = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
+
 
     def attach_meta(self):
         # request data
         self.site_json  = self.museum.site_information()
         self.df_departments = self.museum.site_departments()
+        self.df_departments.to_pickle(self.export_path + "departments.pkl")
         self.df_exhibitions_acquired = self.museum.site_exhibitions()
         self.df_site_spots = self.museum.site_spots()
         self.df_site_rooms = self.museum.site_rooms()
         self.df_site_rooms.count_spots   = self.df_site_rooms.count_spots.astype(int)
         self.df_site_rooms.count_objects = self.df_site_rooms.count_objects.astype(int)
-        # lookup tables
-        self.build_temporal_lookups()
         # location and exhibition data is temporal dependent, not static
         self.df_locations     = self.clean_temporal_data()
         self.df_locations.to_pickle(self.export_path +   "temporal_locations.pkl")
         self.df_exhibitions   = self.transform_exhibitions(self.df_exhibitions_acquired)
         self.df_exhibitions.to_pickle(self.export_path + "temporal_exhibitions.pkl")
-
+        # lookup tables (note there is a dependency on df_locations)
+        self.build_temporal_lookups()
+        # additional meta data
         self.df_objects_meta  = self.df_objects[['id','department_id', 'is_loan_object']]
         self.df_objects_meta  = self.df_objects.rename(columns={'id':'refers_to_object_id'})
         #cols = filter(lambda x: self.df_objects_meta[x].dtype == np.dtype('O'), self.df_objects_meta.columns)
@@ -45,18 +48,23 @@ class MetaObjectStore(object):
         self.df_site_spots['room_name'] = self.df_site_spots.apply(self.tr.extract_roomname, axis=1)
         df_rooms = self.df_site_rooms.rename(columns={'count_objects': 'room_count_objects'})
         df_rooms.id = df_rooms.id.astype(int)
-        df_rooms['description'] = \
-        df_rooms.apply(lambda row: self.df_site_spots[self.df_site_spots.room_name == row['name']]['description'].values[0],axis=1)
+        df_rooms['description'] = df_rooms.apply(lambda row: \
+        self.df_site_spots[self.df_site_spots.room_name == row['name']]['description'].values[0],axis=1)
         df_rooms = df_rooms.sort_values(by=['room_count_objects', 'count_spots'], ascending=False)
         self.df_rooms_table = df_rooms
         self.df_rooms_table.to_pickle(self.export_path + "rooms_table.pkl")
         # acquire descriptions of types per given room [id, type, room.id, room.name, room.floor, spot.id]
-        df_objects_loctypes = self.df_objects[['id', 'type', 'location_visit']]
-        df_objects_loctypes[['room.id', 'room.name', 'room.floor', 'spot.id']] = \
-        pd.io.json.json_normalize(df_objects_loctypes.location_visit)[['room.id', 'room.name', 'room.floor', 'spot.id']]
-        df_objects_loctypes = df_objects_loctypes.drop('location_visit', axis=1)
-        self.df_objects_locttypes = df_objects_loctypes
-        self.df_objects_locttypes.to_pickle(self.export_path + "object_roomtypes_table.pkl")
+        loc_cols = ['refers_to_object_id', 'room_id', 'room_name', 'room_floor',
+                    'spot_id', 'spot_name', 'spot_description', 'visit_date']
+        loc_sub  = self.df_locations[loc_cols]
+        object_cols = ['id', 'type']
+        df_objects_types = self.df_objects[object_cols]
+        df_objects_loctypes = df_objects_types.merge(loc_sub, left_on='id', right_on='refers_to_object_id', how='inner')
+        df_objects_loctypes = df_objects_loctypes.drop('refers_to_object_id', axis=1)
+        df_objects_loctypes = df_objects_loctypes.rename(columns={'spot_description': 'description'})
+        df_objects_loctypes = df_objects_loctypes.sort_values(by='id').reset_index().drop('index', axis=1)
+        self.df_objects_loctypes = df_objects_loctypes
+        self.df_objects_loctypes.to_pickle(self.export_path + "object_roomtypes_table.pkl")
 
     def clean_temporal_data(self):
         # location data has temporal data that is duplicated and should not be existent
@@ -67,7 +75,7 @@ class MetaObjectStore(object):
         indices_duplicated = reduce(lambda x,y: x+y, df_cleaned)
         df_loc_cleaned = df_loc.drop(indices_duplicated, axis=0).reset_index()
         df_loc_cleaned = df_loc_cleaned.drop('index', axis=1)
-
+        # renaming columns that are a SQL nightmare
         cat_cols = ['spot.name', 'spot.description', 'site.name', 'room.name', 'room.floor_name']
         cols = filter(lambda x: df_loc_cleaned[x].dtype == np.dtype('O') and x not in cat_cols, df_loc_cleaned.columns)
         df_loc_cleaned[cols]   = df_loc_cleaned[cols].astype(long)
