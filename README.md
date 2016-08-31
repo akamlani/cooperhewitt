@@ -38,6 +38,7 @@ Lets take a quick peak of how the pen is being used and some of the metadata abo
 <img src="plots/pen_eda_full.png">
 </p>
 
+<!--
 <br>
 An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
 <p align="center">
@@ -49,7 +50,8 @@ Top Communities from Spark GraphX processing via plotting of iGraph.
 <p align="center">
 <img src="plots/communities.png">
 </p>
-You can view an interactive diagram [here](https://plot.ly/~akamlani/84/artwork/), where hovering shows the type of art.
+You can view an interactive diagram [here](https://plot.ly/~akamlani/89/artwork/), where hovering shows the type of art.
+-->
 
 ## Cooper Hewitt Data Sources
 - [De-identified Pen Data](https://github.com/cooperhewitt/the-pen-data/)
