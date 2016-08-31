@@ -1,4 +1,5 @@
 import operator
+import os
 import pandas as pd
 import cPickle as pickle
 from collections import defaultdict
@@ -17,7 +18,8 @@ class GraphData(object):
 class GraphConn(object):
     def __init__(self):
         self.dag = defaultdict(list)
-        self.export_path = "./../export/"
+        root_path = os.environ['COOPERHEWITT_ROOT']
+        self.export_path = root_path + "/export/"
         self.df_sub_edges = pd.read_pickle(self.export_path  + "community_edges.pkl")
         self.df_sub_nodes = pd.read_pickle(self.export_path  + "community_vertices.pkl")
         #with open(export_path + 'igraph_data.pkl', 'rb') as f: self.gd = pickle.load(f)
@@ -84,7 +86,7 @@ class GraphConn(object):
             Ze+=[layt[src][2],layt[dst][2], None] # z-coordinates of edge ends
         # Retrieve Labels
         labels = list(self.df_sub_nodes.type)
-        group  = list(self.df_sub_nodes.group)
+        group  = list(self.df_sub_nodes.label)
         # set the Graph data
         gx = GraphData()
         gx.labels,gx.group = (labels, group)

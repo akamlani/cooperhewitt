@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import utils
@@ -7,17 +8,25 @@ from sklearn.metrics import pairwise
 
 class MetaObjectStore(object):
     def __init__(self):
-        self.export_path = "./../export/"
+        root_path = os.environ['COOPERHEWITT_ROOT']
+        self.export_path = root_path + "/export/"
         self.tr = utils.Transforms()
         self.util = utils.Utils()
         self.museum = chc.Museum()
-        self.df_objects      = pd.read_pickle(self.export_path + "collection_objects.pkl")
-        self.df_departments  = pd.read_pickle(self.export_path + "departments.pkl")
-        self.df_locations    = pd.read_pickle(self.export_path + "temporal_locations.pkl")
-        self.df_exhibitions  = pd.read_pickle(self.export_path + "temporal_exhibitions.pkl")
-        self.df_rooms_table  = pd.read_pickle(self.export_path + "rooms_table.pkl")
-        self.df_objects_loctypes = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
+        self.df_objects = pd.read_pickle(self.export_path + "collection_objects.pkl")
 
+        files = ["departments.pkl", "temporal_locations.pkl", "temporal_exhibitions.pkl",
+                 "rooms_table.pkl", "object_roomtypes_table.pkl"]
+        # all serialized files must exist
+        n_serializedfiles = sum([os.path.exists(self.export_path + filename) for filename in files])
+        if len(files) != n_serializedfiles:
+            self.attach_meta()
+        else:
+            self.df_departments  = pd.read_pickle(self.export_path + "departments.pkl")
+            self.df_locations    = pd.read_pickle(self.export_path + "temporal_locations.pkl")
+            self.df_exhibitions  = pd.read_pickle(self.export_path + "temporal_exhibitions.pkl")
+            self.df_rooms_table  = pd.read_pickle(self.export_path + "rooms_table.pkl")
+            self.df_objects_loctypes = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
 
     def attach_meta(self):
         # request data
@@ -109,8 +118,7 @@ class MetaObjectStore(object):
         # Textiles: 202, 206, 205, 105
         # Concept Art: 103
         # Staircase Mode: 105,212
-        export_path = "./../export/"
-        loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")
+        loctype_table = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
         cols = ['Drawing', 'Print', 'Concept art', 'textile', 'Staircase model']
         for col in cols:
             print col
@@ -125,12 +133,8 @@ class MetaObjectStore(object):
         # textile: 202, 206 (most prevalent)
 
         df_queries = pd.DataFrame()
-        if query_types == None:
-            query_types = ['Concept art', 'Drawing', 'poster', 'Print', 'Sidewall', 'textile']
-
-        export_path = "./../export/"
-        loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")
-
+        if query_types == None: query_types = ['Concept art', 'Drawing', 'poster', 'Print', 'Sidewall', 'textile']
+        loctype_table = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
         for query in query_types:
             topk_rooms = loctype_table[loctype_table.type == query].room_name.value_counts()[:3]
             df_queries = df_queries.append( {'query':query, 'rooms': topk_rooms.to_dict()}, ignore_index=True )
@@ -138,8 +142,6 @@ class MetaObjectStore(object):
 
     def debug_room_types(self, room_name):
         # what types of artwork are associated with a room
-        export_path = "./../export/"
-        loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")
-
+        loctype_table = pd.read_pickle(self.export_path + "object_roomtypes_table.pkl")
         print room_name
         loctype_table[loctype_table['room.name'] == room_name]['type'].value_counts()

@@ -60,7 +60,7 @@ class Display(object):
         plt.tight_layout()
         fig.savefig(filename, dpi=100)
 
-    def plotly_graph(self, gx, filename):
+    def plotly_graph(self, gx, filename, image_filename):
         axis=dict(showbackground=False, showline=False, zeroline=False, showgrid=False, showticklabels=False, title='')
         trace1=go.Scatter3d(x=gx.Xe,y=gx.Ye,z=gx.Ze, mode='lines',
                             line=go.Line(color='rgb(125,125,125)', width=1), hoverinfo='none')
@@ -85,7 +85,7 @@ class Display(object):
         data=go.Data([trace1, trace2])
         fig=go.Figure(data=data, layout=layout_grid)
         py.iplot(fig, filename=filename)
-        py.image.save_as(fig, filename=filename)
+        py.image.save_as(fig, filename=image_filename)
         return fig
 
     def plot_heatmap(self, frame, filename):

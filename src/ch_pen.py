@@ -6,12 +6,13 @@ import utils
 
 class Pen(object):
     def __init__(self):
-        export_path = "./../export/"
-        pen_file = export_path + "pen-collected-items.csv"
+        root_path = os.environ['COOPERHEWITT_ROOT']
+        self.export_path = root_path + "/export/"
+        pen_file = self.export_path  + "pen-collected-items.csv"
         self.db_query  = databases.Database()
         self.tr        = utils.Transforms()
-        if os.path.exists(export_path + "pen_transformed_features.pkl"):
-            self.df_pen = pd.read_pickle(export_path + "pen_transformed_features.pkl")
+        if os.path.exists(self.export_path + "pen_transformed_features.pkl"):
+            self.df_pen = pd.read_pickle(self.export_path + "pen_transformed_features.pkl")
             self.df_pen.columns = [str(s.replace('.','_')) for s in self.df_pen.columns.tolist()]
             self.df_visitorcreated = self.df_pen[self.df_pen.tool_id != 0]
             self.df_wallobjects    = self.df_pen[(self.df_pen.tool_id == 0) & (self.df_pen.refers_to_object_id !=0)]
@@ -34,8 +35,8 @@ class Pen(object):
         df['hour' ]   = pd.DatetimeIndex(df['created_dateformat_est']).hour
         df['quarter'] = pd.DatetimeIndex(df['created_dateformat_est']).quarter
         # save the converted file to a csv
-        df.to_csv("./../export/pen_transformed_raw.csv")
-        df.to_pickle("./../export/pen_transformed_raw.pkl")
+        df.to_csv(self.export_path    + "/pen_transformed_raw.csv")
+        df.to_pickle(self.export_path + "/pen_transformed_raw.pkl")
 
     def format_times(self, df):
         df.loc[: ,'created_dateformat']     = pd.to_datetime(df['created'], unit='s')
@@ -46,7 +47,7 @@ class Pen(object):
         return df
 
     def feature_engineer(self, df_exhibitions_in):
-        self.df_pen = pd.read_pickle("./../export/pen_transformed_raw.pkl")
+        self.df_pen = pd.read_pickle(self.export_path + "/pen_transformed_raw.pkl")
         # extract closing time events (evening or testings)
         self.df_pen['tagged_after_close'] = self.df_pen.apply(self._create_closing_time, axis=1)
         # set up tracking for exhibition events
@@ -55,8 +56,8 @@ class Pen(object):
         df_exhibitions_in['id'].apply(lambda eid: self._tag_during_exhibition(eid, df_exhibitions_in))
         self.df_pen['during_exhibition']  = self.df_pen['during_exhibition'].astype(int)
         # save the converted file to a csv
-        self.df_pen.to_csv("./../export/pen_transformed_features.csv")
-        self.df_pen.to_pickle("./../export/pen_transformed_features.pkl")
+        self.df_pen.to_csv(self.export_path    + "/pen_transformed_features.csv")
+        self.df_pen.to_pickle(self.export_path + "/pen_transformed_features.pkl")
 
 
     def feature_dummies(self):
@@ -103,7 +104,7 @@ class Pen(object):
         # create single feature matrix
         cols = ['weekend', 'tagged_after_close', 'during_exhibition', 'visitor_drawn', 'meta_store']
         self.df_features = pd.concat([self.df_dummies, frame[cols]], axis=1)
-        self.df_features.to_pickle("./../export/penmeta_features.pkl")
+        self.df_features.to_pickle(self.export_path + "/penmeta_features.pkl")
 
 
     def custom_features(self, df_meta):

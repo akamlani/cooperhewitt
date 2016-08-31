@@ -3,14 +3,14 @@ import requests
 import json
 import time
 import pandas as pd
-
-
+import os
 
 class Museum(object):
 
     def __init__(self):
         self.url = self.create_url()
-        credentials = yaml.load(open('./../config/api_cred.yml'))
+        root_path = os.environ['COOPERHEWITT_ROOT']
+        credentials = yaml.load(open(root_path + '/config/api_cred.yml'))
         self.api_key = credentials['cooperhewitt_key']
         self.access_token = credentials['cooperhewitt_token']
 
