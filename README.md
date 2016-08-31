@@ -41,13 +41,13 @@ Lets take a quick peak of how the pen is being used and some of the metadata abo
 <br>
 An analysis based on feature engineering from aggregating Pen data and the Collections Metadata API.
 <p align="center">
-<img src="plots/heatmap_sm.png">
+<img src="plots/heatmap.png">
 </p>
 
 <br>
 Top Communities from Spark GraphX processing via plotting of iGraph.
 <p align="center">
-<img src="plots/communities_sm.png">
+<img src="plots/communities.png">
 </p>
 You can view an interactive diagram [here](https://plot.ly/~akamlani/84/artwork/), where hovering shows the type of art.
 
