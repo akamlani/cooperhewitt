@@ -2,6 +2,7 @@ from __future__ import division
 import cPickle as pickle
 import pandas as pd
 import numpy as np
+from pprint import pprint
 
 import pyspark
 from pyspark.sql import HiveContext
@@ -29,8 +30,11 @@ class SparkGraphFrames(object):
 
     def write_parquet(self, df, filename):
         '''write a spark datagraph into parquet format'''
-        df.write.parquet(self.export_path +  filename)
+        df.write.format('parquet').mode("overwrite").save(self.export_path +  filename)
 
+    def read_parquet(self, filename):
+        '''read a spark datagraph from parquet format'''
+        return self.sql_cxt.read.parquet(self.export_path + filename)
 
     def create_graph(self):
         # create graph
@@ -99,7 +103,7 @@ class SparkGraphFrames(object):
         neighbors = neighbors.flatMap(lambda x: x).sortBy(lambda x: x)
         df_edges  = self.sql_cxt.createDataFrame(neighbors, ['src', 'dst'])
         df_edges  = df_edges.dropDuplicates()
-        # filter out empty ones
+        # filter out empty ones (no metadata available)
         valid_vertices = self.df_vertices.filter('meta_store = 1').select('id')
         valid_vertices = valid_vertices.select(valid_vertices.id.cast('long'))
         df_edges_valid = df_edges.join(valid_vertices, df_edges.src == valid_vertices.id).select('src', 'dst')
@@ -107,8 +111,58 @@ class SparkGraphFrames(object):
         self.df_edges = df_edges_valid
 
     def show_metrics(self):
+        '''show the basic metrics of a graph'''
         print self.g.inDegrees.orderBy(desc('inDegree')).show()
         print self.g.outDegrees.orderBy(desc('outDegree')).show()
         print self.g.degrees.orderBy(desc('degree')).show()
         print "Num Vertices: ", self.g.vertices.count()
         print "Num Edges: ", self.g.edges.count()
+
+    def subset_majority_clusters(self, maj_clusters_in):
+        '''Perform a Subset on the majority clusters so we can plot a subset of them'''
+        # we don't want to get all the nodes just a subset of them to perform graph theory
+        # df_sub_edges.count(): 223814, sgf.df_edges.count(): 223822, maj_clusters_ids.count(): 3698
+        maj_clusters_ids = maj_clusters_in.select(maj_clusters_in.id.cast('long'))
+        obj_ids = list(maj_clusters_ids.toPandas().id)
+        df_sub_edges = self.df_edges.where(col("src").isin(obj_ids) | col("dst").isin(obj_ids) )
+        df_sub_edges = df_sub_edges.drop_duplicates()
+        df_sub_edges.registerTempTable("communities")
+        self.sql_cxt.cacheTable("communities")
+
+        tb = self.sql_cxt.sql("""
+                                SELECT src, COUNT(src) as src_count
+                                FROM communities
+                                GROUP BY src
+                                HAVING COUNT(*) <= 15
+                                ORDER BY src_count DESC
+                              """)
+        # serialize community edges and vertices to plot
+        # df_sub_edges.count(): 223816, tb_edges.count(): 9107
+        tb_edges = tb.join(df_sub_edges, on='src').select('src','dst')
+        tb_edges.toPandas().to_pickle(self.export_path + "community_edges.pkl")
+        vertices_meta = maj_clusters_in.select('id', 'type', 'label')
+        vertices_meta.toPandas().to_pickle(self.export_path  + "community_vertices.pkl")
+
+
+
+### exploration
+    def transition_vertice_types(self, ranks_in, selected_rankids, query):
+        df_metaranks = pd.DataFrame()
+        for rank_id in selected_rankids:
+            # the other vertice that is not the query type
+            df_edges_influence = self.df_vertices.filter(self.df_vertices.id == rank_id).select('type')
+            influence_type     = list(df_edges_influence.toPandas().ix[0])[0]
+            # retrieve all vertices where the rank is the query type
+            df_edges_joined = self.df_edges.filter(self.df_edges[query['influence']] == int(rank_id))
+            df_edges_meta   = df_edges_joined.join(ranks_in.vertices,
+                                                   df_edges_joined[query['transition']] == ranks_in.vertices.id)
+            df_edges_meta_cnt  = df_edges_meta.groupby('type').count().orderBy(desc('count')).limit(10)
+            df_edges_meta_dict = df_edges_meta_cnt.toPandas().to_dict(orient='records')
+            df_metaranks = df_metaranks.append({'influence_id': int(rank_id), 'influence_type': influence_type,
+                                                'transition_types': df_edges_meta_dict}, ignore_index=True)
+        return df_metaranks
+
+    def show_transitions(self, transititions_frame):
+        for idx, row in transititions_frame.iterrows():
+            print int(row.influence_id), row.influence_type
+            pprint(row.transition_types, indent=4)

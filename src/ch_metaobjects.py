@@ -58,7 +58,7 @@ class MetaObjectStore(object):
                     'spot_id', 'spot_name', 'spot_description', 'visit_date']
         loc_sub  = self.df_locations[loc_cols]
         object_cols = ['id', 'type']
-        df_objects_types = self.df_objects[object_cols]
+        df_objects_types = self.df_objects[object_cols].drop_duplicates()
         df_objects_loctypes = df_objects_types.merge(loc_sub, left_on='id', right_on='refers_to_object_id', how='inner')
         df_objects_loctypes = df_objects_loctypes.drop('refers_to_object_id', axis=1)
         df_objects_loctypes = df_objects_loctypes.rename(columns={'spot_description': 'description'})
@@ -100,8 +100,8 @@ class MetaObjectStore(object):
         matrix = matrix.set_index('refers_to_object_id')
         self.object_cos_sim = pairwise.cosine_similarity(matrix)
 
-
-    def debug_room_types():
+### Debug rooms
+    def debug_room_types(self):
         # what types of artwork are associated with rooms
 
         # Drawings: 205, 202, 105, 206, 201
@@ -116,7 +116,27 @@ class MetaObjectStore(object):
             print col
             print loctype_table[loctype_table.type == col]['room.name'].value_counts()[:10]
 
-    def debug_room_types(room_name):
+    def debug_topk_room_types(self, query_types=None):
+        # poster:  room 202, 205  (most prevalent)
+        # Drawing: room 205, 202  (most prevalent)
+        # Concept art: 106
+        # Sidewall: 206, 213, 202 (most prevalent)
+        # Print: 205, 202 (most prevalent)
+        # textile: 202, 206 (most prevalent)
+
+        df_queries = pd.DataFrame()
+        if query_types == None:
+            query_types = ['Concept art', 'Drawing', 'poster', 'Print', 'Sidewall', 'textile']
+
+        export_path = "./../export/"
+        loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")
+
+        for query in query_types:
+            topk_rooms = loctype_table[loctype_table.type == query].room_name.value_counts()[:3]
+            df_queries = df_queries.append( {'query':query, 'rooms': topk_rooms.to_dict()}, ignore_index=True )
+        return df_queries
+
+    def debug_room_types(self, room_name):
         # what types of artwork are associated with a room
         export_path = "./../export/"
         loctype_table = pd.read_pickle(export_path + "object_roomtypes_table.pkl")

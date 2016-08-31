@@ -16,7 +16,7 @@ class Display(object):
     def __init__(self):
         pass
 
-    def create_subplots(self, params, (nrows, ncols, plt_size), filename='plots/pen_eda.png'):
+    def create_subplots(self, params, (nrows, ncols, plt_size), filename='plots/pen_eda.png', title=''):
         fig, _ = plt.subplots(nrows, ncols, figsize=plt_size)
 
         for idx, (ax, param_i) in enumerate(zip(fig.axes, params)):
@@ -45,11 +45,18 @@ class Display(object):
             ax.tick_params(axis='y', which='major', pad=15)
 
             for tick in ax.xaxis.get_major_ticks():
-                tick.label.set_fontsize(13)
+                tick.label.set_fontsize(12)
+                tick.label.set_fontweight('bold')
+            for tick in ax.yaxis.get_major_ticks():
+                tick.label.set_fontsize(12)
                 tick.label.set_fontweight('bold')
 
         #fig.delaxes(fig.axes[nrows*ncols-1])
-        plt.subplots_adjust(bottom=0.05)
+        if title:
+            fig.suptitle(title, fontsize=12, fontweight='bold', style='italic')
+            plt.subplots_adjust(top=0.25, bottom=0.10)
+        else:
+            plt.subplots_adjust(bottom=0.10)
         plt.tight_layout()
         fig.savefig(filename, dpi=100)
 

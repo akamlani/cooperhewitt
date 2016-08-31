@@ -84,7 +84,7 @@ df_subset_corr = df_subset_corr.rename(columns=mapped_cols)
 df_subset_corr.index = map(lambda x: mapped_cols[x], df_subset_corr.index)
 dsp.plot_heatmap(df_subset_corr, './../plots/heatmap.png')
 
-# modeling (hierarchical clustering)
+### modeling (hierarchical clustering)
 samples = df_features.sample(frac=0.00275)
 X = samples.values
 Z, cutoff, clusters = models.execute_hierarchical_clustering(X)
