@@ -1,20 +1,19 @@
 from __future__ import division
-import aws_utils
 import pyspark
 from pyspark.sql.functions import desc, count
 
 import ch_graphframes as cgf
 import ch_metaobjects as chm
 import ch_pen as chp
+import aws_utils
 import plots
 
 from pprint import pprint
 from IPython.core.display import display
-%matplotlib inline
 
 import numpy as np
 import pandas as pd
-pd.set_option('display.max_columns', 75)
+import os
 
 ### PAGERANK utility methods
 def pagerank_topk(ranks_in):
@@ -96,7 +95,8 @@ def plot_pagerank_activity(infl_tier1_tags_in):
       # TBD:  Type of Artwork, Type of Room, Room Number
     ]
     title_str = 'Top {0} Influential Artworks Tag Activity'.format(10)
-    dsp.create_subplots( params, (1, 3, (16,6)), '../plots/pagerank_eda.png', title_str)
+    filename  = os.environ['COOPERHEWITT_ROOT'] + '/plots/pagerank_eda.png'
+    dsp.create_subplots( params, (1, 3, (16,6)), filename, title_str)
 
 
 ### COMMUNITY (LPA) Utility Methods
@@ -148,79 +148,5 @@ def evaluate_communities(communities_in, meta_frame, tag_frame):
     clusters_meta = explore_clusters(df_maj_clusters, meta_frame, tag_frame)
     return maj_clusters, clusters_meta
 
-### SPARK CONFIGURATION (currently using spark-submit instead)
-def aws_conf():
-    # get master url
-    aws = aws_utils.AwsConnUtils()
-    dns_mapping = aws.get_public_dns()
-    url = 'spark://' + str(dns_mapping['public_dns']) + ':7077'
-    # set configuration
-    conf = pyspark.SparkConf()
-    conf.setMaster(url)
-    conf.set("spark.executor.memory", "8g")
-    conf.set("spark.driver.memory", "8g")
-    sc = pyspark.SparkContext(conf=conf, appName = "Cooper Hewitt Graphs")
-    print sc._conf.getAll()
-
-
-if __name__ == "__main__":
-    sc = pyspark.SparkContext(appName = "Cooper Hewitt Graphs")
-    ### objects
-    dsp  = plots.Display()
-    pen  = chp.Pen()
-    meta = chm.MetaObjectStore()
-    df_associate_rooms = meta.debug_topk_room_types()
-    display(df_associate_rooms)
-
-    ### Graph Frames
-    sgf = cgf.SparkGraphFrames(sc)
-    sgf.create_graph()
-    sgf.df_edges.printSchema()
-    sgf.df_vertices.printSchema()
-
-    ### Evaluate PageRank
-    ranks = sgf.g.pageRank(resetProbability=0.15, tol=0.01)
-    df_ranks_selected, df_meta_ranks = evaluate_pagerank(ranks, meta.df_objects_loctypes)
-    rank_ids = list(df_ranks_selected.id.unique()[:10])
-    # evaluate transition locations
-    # src type: 'poster', 'Drawing' 'concept art', destination: influential artwork
-    query_tr_in  = {'influence': 'dst', 'transition': 'src'}
-    df_transitions_in  = sgf.transition_vertice_types(ranks, rank_ids, query_tr_in)
-    # src type: influential artwork, destination: 'poster'/'concept art'; 'poster'/'Drawing'
-    query_tr_out = {'influence': 'src', 'transition': 'dst'}
-    df_transitions_out = sgf.transition_vertice_types(ranks, rank_ids, query_tr_out)
-    ### Transitions to and from influential paintings (k = top 10)
-    #print "Transitions towards Influential"
-    #sgf.show_transitions(df_transitions_in)
-    #print "Transitions departing Influential"
-    #sgf.show_transitions(df_transitions_out)
-    ### Tier of page ranks
-    print "Top 10 Tier Pagerank Measurements"
-    top_ranks, infl_tier1_tags     = chga.measure_pagerank(ranks, pen.df_pen, k=10, tier='top')
-    print "\nBottom 10 Tier Pagerank Measurements"
-    bottom_ranks, infl_tierk_tags  = chga.measure_pagerank(ranks, pen.df_pen, k=10, tier='bottom')
-    ### Plot Time Periods
-    plot_pagerank_activity(top_tier_tags)
-
-    ### Evaluate Communities
-    communities = sgf.g.labelPropagation(maxIter=50)
-    maj_clusters, clusters_meta = evaluate_communities(communities, meta.df_objects_loctypes, pen.df_pen)
-    sgf.subset_majority_clusters(maj_clusters)
-
-    ### Unused Models (TBD)
-    # strongly connected => each vertex is reachable by every other vertex
-    # connectedness = sgf.g.connectedComponents()
-    # strongly_connectedness = sgf.g.stronglyConnectedComponents(maxIter=25)
-    # connectedness.select("id", "title", "type", "department",  "component").orderBy(desc("component"))
-    # strongly_connectedness.select("id", "title", "type", "department", "component").orderBy(desc("component"))
-    # triangles = sgf.g.triangleCount()
-
-    #sgf.write_parquet(connectedness, "connectedness.parquet")
-    #sgf.write_parquet(ranks,         "ranks.parquet")
-    #sgf.write_parquet(triangles,     "triangles.parquet")
-    #sgf.write_parquet(communities,   "communities.parquet")
-    #communities = sgf.read_parquet("communities.parquet")
-    #df_vertices = sgf.read_parquet("vertices.parquet")
-    #df_edges    = sgf.read_parquet("edges.parquet")
-
-    #sc.stop()
+pd.set_option('display.max_columns', 75)
+dsp  = plots.Display()

@@ -12,17 +12,17 @@ from pyspark.sql.functions import *
 import graphframes as gf
 
 import ch_metaobjects as chm
+import os
 
 
 class SparkGraphFrames(object):
     def __init__(self, sc):
-        self.export_path = "./../export/"
         self.hive_cxt = HiveContext(sc)
         self.sql_cxt  = SQLContext(sc)
         self.meta     = chm.MetaObjectStore()
 
         # data Sources
-        self.export_path = "./../export/"
+        self.export_path = os.environ['COOPERHEWITT_ROOT']  + "/export/"
         self.df_objects  = pd.read_pickle(self.export_path + "collection_objects.pkl")
         self.df_objseq   = pd.read_pickle(self.export_path + "pen_bundle_objseq.pkl")
         self.df_pendata  = pd.read_pickle(self.export_path + "pen_transformed_features.pkl")
@@ -144,7 +144,6 @@ class SparkGraphFrames(object):
         vertices_meta.toPandas().to_pickle(self.export_path  + "community_vertices.pkl")
 
 
-
 ### exploration
     def transition_vertice_types(self, ranks_in, selected_rankids, query):
         df_metaranks = pd.DataFrame()
@@ -162,7 +161,8 @@ class SparkGraphFrames(object):
                                                 'transition_types': df_edges_meta_dict}, ignore_index=True)
         return df_metaranks
 
-    def show_transitions(self, transititions_frame):
+    def show_transitions(self, transititions_frame, query_cnt):
         for idx, row in transititions_frame.iterrows():
             print int(row.influence_id), row.influence_type
             pprint(row.transition_types, indent=4)
+            if((idx +1) >= query_cnt): break

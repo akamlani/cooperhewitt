@@ -17,6 +17,6 @@ class AwsConnUtils(object):
 
 
 # get master
-aws = aws_utils.AwsConnUtils()
+aws = AwsConnUtils()
 dns_mapping = aws.get_public_dns()
 url = 'spark://' + str(dns_mapping['public_dns']) + ':7077'
