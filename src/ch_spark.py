@@ -6,7 +6,7 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType, 
 
 import os
 
-class DistributedSpark(object):
+class SparkEngine(object):
     def __init__(self, sc, debug=False):
         self.export_path = os.environ['COOPERHEWITT_ROOT'] + "/export/"
         self.sc = sc
@@ -66,7 +66,7 @@ class DistributedSpark(object):
         self.hive_cxt.cacheTable('minimizedsamples')
         return tb_samples
 
-    def distribute_temporal_query(self, (samples_schema,  samples_frame, samples_name),
+    def execute_query(self, (samples_schema,  samples_frame, samples_name),
                                         (temporal_schema, temporal_frame, temporal_name),
                                         cols):
         self.df_samples       = self._create_df_table(samples_schema,  samples_frame,  samples_name)
@@ -86,7 +86,7 @@ class DistributedSpark(object):
 if __name__ == "__main__":
     sc = pyspark.SparkContext(appName = "Spark Transformations")
     # objects
-    sp   = DistributedSpark(sc)
+    sp   = SparkEngine(sc)
     pen  = chp.Pen()
     meta = chm.MetaObjectStore()
     # subset frames
@@ -109,9 +109,9 @@ if __name__ == "__main__":
     ])
     samples_frame_data = samples_frame.values.tolist()
     # perform spark transformations
-    distribute_temporal_query( (schema_samples, samples_frame_data, "samples"),
-                               ("", temporal_frame, "temporal"),
-                               ['visit_raw'])
+    sp.execute_query( (schema_samples, samples_frame_data, "samples"),
+                      ("", temporal_frame, "temporal"),
+                      ['visit_raw'])
 
 
 #### Format data that did not work on timestamp convergence:
