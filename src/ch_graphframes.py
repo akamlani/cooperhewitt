@@ -1,18 +1,19 @@
 from __future__ import division
-import cPickle as pickle
+import pickle
 import pandas as pd
 import numpy as np
+import os
 from pprint import pprint
+from IPython.core.display import display, HTML
 
 import pyspark
 from pyspark.sql import HiveContext
 from pyspark.sql import SQLContext
+from pyspark.sql.functions import desc, count, col
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
-from pyspark.sql.functions import *
 import graphframes as gf
 
 import ch_metaobjects as chm
-import os
 
 
 class SparkGraphFrames(object):
@@ -22,6 +23,7 @@ class SparkGraphFrames(object):
         self.meta     = chm.MetaObjectStore()
 
         # data Sources
+        self.hdfs_export_path = "export/"
         self.export_path = os.environ['COOPERHEWITT_ROOT']  + "/export/"
         self.df_objects  = pd.read_pickle(self.export_path + "collection_objects.pkl")
         self.df_objseq   = pd.read_pickle(self.export_path + "pen_bundle_objseq.pkl")
@@ -37,15 +39,17 @@ class SparkGraphFrames(object):
         return self.sql_cxt.read.parquet(self.export_path + filename)
 
     def create_graph(self):
+        '''create a graph via vertices and edges'''
         # create graph
         self.bind_vertices()
         self.bind_edges()
         self.g = gf.GraphFrame(self.df_vertices, self.df_edges)
         # write to fs in parquet format
-        self.g.vertices.write.format('parquet').mode("overwrite").save(self.export_path + "vertices.parquet")
-        self.g.edges.write.format('parquet').mode("overwrite").save(self.export_path + "edges.parquet")
+        #self.g.vertices.write.format('parquet').mode("overwrite").save("vertices.parquet")
+        #self.g.edges.write.format('parquet').mode("overwrite").save("edges.parquet")
 
     def bind_vertices(self):
+        '''bind the metadata to the vertices'''
         schema_vertices = StructType([
             StructField("id",            StringType(), True),
             StructField("title",         StringType(), True),
@@ -58,7 +62,6 @@ class SparkGraphFrames(object):
             StructField("meta_store",    IntegerType(), True)
         ])
 
-        #7783 Unique Vertices
         vertices = self.df_objids.map(self.build_vertices)
         self.df_vertices = self.sql_cxt.createDataFrame(vertices, schema=schema_vertices)
 
@@ -118,6 +121,12 @@ class SparkGraphFrames(object):
         print "Num Vertices: ", self.g.vertices.count()
         print "Num Edges: ", self.g.edges.count()
 
+    def pagerank_scorer_topk(self, ranks_in, k=10):
+        '''score engine: retrieve the top 'k' pagerank vertices and associated with metadata'''
+        return ranks_in.vertices.select(ranks_in.vertices.id.cast("long").alias('id'), 'department', 'type', 'pagerank')\
+                                .orderBy(desc("pagerank"))\
+                                .limit(k)
+
     def subset_majority_clusters(self, maj_clusters_in):
         '''Perform a Subset on the majority clusters so we can plot a subset of them'''
         # we don't want to get all the nodes just a subset of them to perform graph theory
@@ -137,7 +146,7 @@ class SparkGraphFrames(object):
                                 ORDER BY src_count DESC
                               """)
         # serialize community edges and vertices to plot
-        # df_sub_edges.count(): 223816, tb_edges.count(): 9107
+        # df_sub_edges.count(): ~223816, tb_edges.count(): ~9107
         tb_edges = tb.join(df_sub_edges, on='src').select('src','dst')
         tb_edges.toPandas().to_pickle(self.export_path + "community_edges.pkl")
         vertices_meta = maj_clusters_in.select('id', 'type', 'label')
@@ -146,6 +155,7 @@ class SparkGraphFrames(object):
 
 ### exploration
     def transition_vertice_types(self, ranks_in, selected_rankids, query):
+        '''explore how a selection of ranks are transitioned to and from'''
         df_metaranks = pd.DataFrame()
         for rank_id in selected_rankids:
             # the other vertice that is not the query type
@@ -160,9 +170,3 @@ class SparkGraphFrames(object):
             df_metaranks = df_metaranks.append({'influence_id': int(rank_id), 'influence_type': influence_type,
                                                 'transition_types': df_edges_meta_dict}, ignore_index=True)
         return df_metaranks
-
-    def show_transitions(self, transititions_frame, query_cnt):
-        for idx, row in transititions_frame.iterrows():
-            print int(row.influence_id), row.influence_type
-            pprint(row.transition_types, indent=4)
-            if((idx +1) >= query_cnt): break

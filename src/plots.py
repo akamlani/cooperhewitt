@@ -29,11 +29,11 @@ class Display(object):
             elif param_i.get('type') == 'hbar':
                 sns.barplot(param_i['frame'],  list(param_i['frame'].index), ax=ax , orient='h')
             else:
-                ax.plot(param_i['frame'].index, param_i['frame'])
+                param_i['frame'].plot(ax = ax)
 
             y_label = param_i['ylabel'] if param_i.get('transform') else param_i['ylabel']
-            ax.set_ylabel(y_label, fontweight='bold')
-            ax.set_xlabel(param_i['xlabel'], fontweight='bold')
+            ax.set_ylabel(y_label, fontweight='bold', fontsize=12, style='italic')
+            ax.set_xlabel(param_i['xlabel'], fontweight='bold', fontsize=12, style='italic')
             if param_i.get('title'): ax.set_title(param_i.get('title'))
             if param_i.get('rot'):
                 for item in ax.get_xticklabels(): item.set_rotation(param_i.get('rot'))
@@ -42,7 +42,7 @@ class Display(object):
                 ax.set_xlim(tup[0], tup[1])
             if param_i.get('labels'):
                 items = param_i.get('labels')
-            ax.tick_params(axis='y', which='major', pad=15)
+                ax.tick_params(axis='y', which='major', pad=15)
 
             for tick in ax.xaxis.get_major_ticks():
                 tick.label.set_fontsize(12)
@@ -54,9 +54,10 @@ class Display(object):
         #fig.delaxes(fig.axes[nrows*ncols-1])
         if title:
             fig.suptitle(title, fontsize=12, fontweight='bold', style='italic')
-            plt.subplots_adjust(top=0.25, bottom=0.10)
+            plt.subplots_adjust(top=0.10, bottom=0.075)
         else:
             plt.subplots_adjust(bottom=0.10)
+
         plt.tight_layout()
         fig.savefig(filename, dpi=100)
 

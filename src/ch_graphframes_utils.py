@@ -15,25 +15,27 @@ import numpy as np
 import pandas as pd
 import os
 
+
 ### PAGERANK utility methods
-def pagerank_topk(ranks_in):
+def pagerank_topk(ranks_in, k=10):
+    '''retrieve the top 'k' pagerank vertices and associated with metadata'''
     df_rank_slice = ranks_in.vertices.select('id', 'department', 'type', 'pagerank')\
                             .orderBy(desc("pagerank"))\
-                            .limit(10)
+                            .limit(k)
     df_ranks = df_rank_slice.toPandas().sort_values(by='pagerank', ascending=False)
     df_ranks.id = df_ranks.id.astype(long)
     return df_ranks
 
 def inspect_pagerank(metaframe, selected_ranks):
+    '''gather metadata about the selected rank vertices, assumes functioning off of pandas dataframe'''
     # gather information about pageranks
     df = metaframe[metaframe.id.isin(list(selected_ranks.id))] \
-                    .merge(selected_ranks, on='id') \
-                    .sort_values(by='pagerank', ascending=False)\
-                    .reset_index().drop(['index', 'type_y'], axis=1)
+                            .merge(selected_ranks, on='id') \
+                            .sort_values(by='pagerank', ascending=False)\
+                            .reset_index().drop(['index', 'type_y'], axis=1)
 
     df = df.rename(columns={'type_x': 'type'})
     return df
-
 
 def measure_pagerank(ranks_in, tag_frame, k=10, tier='top'):
     # PageRank based on incoming links (voting) to determine level of importance
@@ -76,9 +78,9 @@ def evaluate_pagerank(ranks_in, meta_frame):
     return df_ranks_selected, df_meta_ranks
 
 def plot_pagerank_activity(infl_tier1_tags_in):
-    influential_months = infl_tier1_tags_in.month.value_counts().sort_values(ascending=False)
-    influential_dow    = infl_tier1_tags_in.dow.value_counts().sort_values(ascending=False)
-    influential_hours  = infl_tier1_tags_in.hour.value_counts().sort_values(ascending=False)
+    influential_months = infl_tier1_tags_in.month.value_counts().sort_index()
+    influential_dow    = infl_tier1_tags_in.dow.value_counts().sort_index()
+    influential_hours  = infl_tier1_tags_in.hour.value_counts().sort_index()
     influential_hours  = influential_hours[(influential_hours.index <= 21) & (influential_hours.index >= 10)]
     months = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
               7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec" }
@@ -87,14 +89,14 @@ def plot_pagerank_activity(infl_tier1_tags_in):
     influential_months.index = influential_months.index.map(lambda x: months[x])
     influential_dow.index = influential_dow.index.map(lambda x: dow[x])
     influential_hours.index = influential_hours.index.map(lambda x: hours[x])
-    # setup parameters for plotting
     params = [
-      {'frame': influential_months,     'ylabel': 'Month',       'xlabel': '# Tags',  'type': 'hbar',  'rot': 30},
-      {'frame': influential_dow,        'ylabel': 'Day of Week', 'xlabel': '# Tags',  'type': 'hbar',  'rot': 30},
-      {'frame': influential_hours,      'ylabel': 'Hour',        'xlabel': '# Tags',  'type': 'hbar',  'rot': 30}
+      {'frame': influential_months,     'xlabel': 'Month',       'ylabel': '# Tags',  'rot': 0},
+      {'frame': influential_dow,        'xlabel': 'Day of Week', 'ylabel': '# Tags',  'rot': 0},
+      {'frame': influential_hours,      'xlabel': 'Hour',        'ylabel': '# Tags',  'rot': 0}
       # TBD:  Type of Artwork, Type of Room, Room Number
     ]
-    title_str = 'Top {0} Influential Artworks Tag Activity'.format(10)
+
+    title_str = 'Tag Activity per Top {0} Influential Artworks'.format(10)
     filename  = os.environ['COOPERHEWITT_ROOT'] + '/plots/pagerank_eda.png'
     dsp.create_subplots( params, (1, 3, (16,6)), filename, title_str)
 
