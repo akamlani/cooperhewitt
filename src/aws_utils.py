@@ -3,7 +3,8 @@ import boto
 
 class AwsConnUtils(object):
     def __init__(self):
-        self.export_path = './../export/'
+        root_path = os.environ['COOPERHEWITT_ROOT']
+        self.export_path = root_path + "/export/"
         self.access_key = os.environ['AWS_ACCESS_KEY_ID']
         self.secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
         self.conn = boto.connect_ec2(self.access_key, self.secret_access_key)
@@ -15,8 +16,9 @@ class AwsConnUtils(object):
         for inst in instances if instance_name in inst.__dict__['tags']['Name'] ][0]
         return name_dns_mapping
 
-
-# get master
-aws = AwsConnUtils()
-dns_mapping = aws.get_public_dns()
-url = 'spark://' + str(dns_mapping['public_dns']) + ':7077'
+if __name__ == "__main__":
+    # get master to be used with spark context
+    aws = AwsConnUtils()
+    dns_mapping = aws.get_public_dns()
+    url = 'spark://' + str(dns_mapping['public_dns']) + ':7077'
+    print url
