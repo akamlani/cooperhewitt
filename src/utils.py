@@ -63,20 +63,3 @@ class Transforms(object):
         room_map = {'room_'+rm: 'rm_' + mapping_frame[mapping_frame['id'] == int(rm)].name.values[0] \
                     for rm in rooms if '9999' not in rm}
         return rooms, room_map
-
-    def estimate_bursty_bundle(self, bundle_seq, threshold):
-        # bursty cycles according to moving average of a bundle
-        cnt = len(bundle_seq)
-        if cnt > 1:
-            ts = pd.Series(bundle_seq).map(lambda x: x[0])
-            ts = pd.Series(1 , index = ts)
-            ts_samples = ts.resample('10T').count()
-            ts_mva  = ts_samples.rolling(window=2, center=False).mean()
-            ts_mva  = ts_mva.fillna(-1)
-            max_ts_mva = max(ts_mva)
-        else:
-            max_ts_mva = -1.0
-            bursty     = 0
-
-        seq = {'ntags': cnt, 'mva': max_ts_mva, 'bursty': (1 if max_ts_mva > threshold else 0) }
-        return pd.Series(seq)

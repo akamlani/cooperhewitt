@@ -25,6 +25,28 @@ sns.set_palette("husl")
 import utils
 import ch_collections as chc
 
+
+def anomaly_detector(ts_frame):
+    '''anomaly detection via statistical measures of recent time series datapoint > mva + 3*STD, resample period=10sec'''
+    # bursty cycles according to moving average of a bundle
+    n_anomalies = 0
+    if len(ts_frame) > 1:
+        # resample the sequence every 10 seconds, determine how many events occur in this period of time
+        # then calculate the moving average over a given window (np.ma.average)
+        ts = pd.Series(ts_frame).map(lambda x: x[0])
+        ts = pd.Series(1 , index = ts)
+        ts_samples = ts.resample('10T').count()
+        rolling_window = ts_samples.rolling(window=2, center=True)
+        sample_std = np.std(ts_samples)
+        window_mva = rolling_window.mean()
+        window_std = np.std(window_mva)
+        # determine if the most recent datapoint is more than 3 STD from moving average
+        anomalies = [ dp > (mva+(3*window_std)) for dp,mva in zip(ts_samples, window_mva)  ]
+        n_anomalies = sum(anomalies)
+
+    seq = {'n_obs': len(ts_frame), 'n_anomalies': n_anomalies}
+    return pd.Series(seq)
+
 def execute_PCA(features, n_comp):
     X_centered = scale(features)
     pca = PCA(n_components=n_comp)
