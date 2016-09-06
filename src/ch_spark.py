@@ -105,7 +105,7 @@ if __name__ == "__main__":
         StructField("dow",                IntegerType(), True),StructField("week",                   IntegerType(), True),
         StructField("weekend",            IntegerType(), True),StructField("hour",                   IntegerType(), True),
         StructField("quarter",            IntegerType(), True),StructField("tagged_after_close",     IntegerType(), True),
-        StructField("during_exhibition",  IntegerType(), True),
+        StructField("during_exhibition",  IntegerType(), True),StructField("visitor_drawn",          IntegerType(), True)
     ])
     samples_frame_data = samples_frame.values.tolist()
     # perform spark transformations

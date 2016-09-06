@@ -26,7 +26,7 @@ class SparkGraphFrames(object):
         self.hdfs_export_path = "export/"
         self.export_path = os.environ['COOPERHEWITT_ROOT']  + "/export/"
         self.df_objects  = pd.read_pickle(self.export_path + "collection_objects.pkl")
-        self.df_objseq   = pd.read_pickle(self.export_path + "pen_bundle_objseq.pkl")
+        self.df_objseq   = pd.read_pickle(self.export_path + "pen_bundle_obj_journeys.pkl")
         self.df_pendata  = pd.read_pickle(self.export_path + "pen_transformed_features.pkl")
         self.df_objids   = pd.Series(self.df_pendata.refers_to_object_id.unique()).map(lambda x: x)
 

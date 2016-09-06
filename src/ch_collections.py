@@ -8,13 +8,14 @@ import os
 class Museum(object):
 
     def __init__(self):
-        self.url = self.create_url()
+        self.url = self._create_url()
         root_path = os.environ['COOPERHEWITT_ROOT']
         credentials = yaml.load(open(root_path + '/config/api_cred.yml'))
         self.api_key = credentials['cooperhewitt_key']
         self.access_token = credentials['cooperhewitt_token']
+        self.site_id = '68432403'
 
-    def create_url(self):
+    def _create_url(self):
         hostname = 'api.collection.cooperhewitt.org'
         endpoint = '/rest'
         url = "https://" + hostname + endpoint + '/'
@@ -85,7 +86,7 @@ class Museum(object):
 
     def site_objects(self):
         req_method = 'cooperhewitt.objects.locations.sites.getObjects'
-        rsp_json   = self.execute_pages(req_method, {'site_id': int(self.site_id)}, u'objects')
+        rsp_json   = self._execute_pages(req_method, {'site_id': int(self.site_id)}, u'objects')
         return rsp_json
 
     def site_departments(self):

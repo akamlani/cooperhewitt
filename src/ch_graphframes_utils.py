@@ -123,12 +123,18 @@ def explore_clusters(df_maj_clusters_in, meta_frame, tag_frame):
     # rooms: large cluster: 202, 205; small cluster: 302
     pen_clusters = tag_frame.merge(df_maj_clusters_in, left_on='refers_to_object_id', right_on='obj_id')
     loctypes_clusters = meta_frame.merge(df_maj_clusters_in, left_on='id', right_on='obj_id')
-    df_cluster_exhibitions  = pd.DataFrame(pen_clusters.groupby('label').during_exhibition.value_counts())
-    df_cluster_afterclosing = pd.DataFrame(pen_clusters.groupby('label').tagged_after_close.value_counts())
-    df_cluster_loanstate    = pd.DataFrame(pen_clusters.groupby('label').loan.value_counts())
-    df_cluster_departments  = pd.DataFrame(pen_clusters.groupby('label').department.value_counts())
-    df_cluster_types = pd.DataFrame(pen_clusters.groupby('label').type.value_counts()).groupby(level=0).head(5)
-    df_cluster_rooms = pd.DataFrame(loctypes_clusters.groupby('label').room_name.value_counts()).groupby(level=0).head(5)
+    df_cluster_exhibitions  = pd.DataFrame(pen_clusters.groupby('label').during_exhibition.value_counts())\
+                                          .rename(columns={'during_exhibition': 'count'})
+    df_cluster_afterclosing = pd.DataFrame(pen_clusters.groupby('label').tagged_after_close.value_counts())\
+                                          .rename(columns={'tagged_after_close': 'count'})
+    df_cluster_loanstate    = pd.DataFrame(pen_clusters.groupby('label').loan.value_counts())\
+                                          .rename(columns={'loan': 'count'})
+    df_cluster_departments  = pd.DataFrame(pen_clusters.groupby('label').department.value_counts())\
+                                          .rename(columns={'department': 'count'})
+    df_cluster_types = pd.DataFrame(pen_clusters.groupby('label').type.value_counts()).groupby(level=0).head(5)\
+                                    .rename(columns={'type': 'count'})
+    df_cluster_rooms = pd.DataFrame(loctypes_clusters.groupby('label').room_name.value_counts())\
+                         .groupby(level=0).head(5).rename(columns={'room_name': 'count'})
     meta_clusters = {'exhibitions': df_cluster_exhibitions, 'afterclosing': df_cluster_afterclosing,
                      'loanstate':   df_cluster_loanstate,   'depts': df_cluster_departments,
                      'types':       df_cluster_types,       'rooms': df_cluster_rooms}
@@ -140,7 +146,7 @@ def explore_cluster_correlations(df_maj_clusters_in):
     df_dept_dumm = pd.get_dummies(df_maj_clusters_in.department, prefix='dept')
     df_merged    = pd.concat([df_dept_dumm, df_type_dumm, df_maj_clusters], axis=1)
     df_merged    = df_merged.drop(['department', 'type'], axis=1)
-    cols = df_dept_dumm.columns.tolist() + df_type_dumm.columns.tolist() + [u'label']#[u'label', u'during_exhibition']
+    cols = df_dept_dumm.columns.tolist() + df_type_dumm.columns.tolist() + [u'label']
     df = pd.DataFrame(df_merged[cols].groupby('label').corr()).sort()
     return df
 

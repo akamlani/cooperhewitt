@@ -15,20 +15,18 @@ class Pen(object):
         self.tr        = utils.Transforms()
         if os.path.exists(self.export_path + "pen_transformed_features.pkl"):
             self.df_pen = pd.read_pickle(self.export_path + "pen_transformed_features.pkl")
-            self.df_pen.columns = [str(s.replace('.','_')) for s in self.df_pen.columns.tolist()]
-        # separate visitor-created items vs wall-tagged objects
-        self.df_visitorcreated = self.df_pen[self.df_pen.tool_id != 0]
-        self.df_wallobjects    = self.df_pen[(self.df_pen.tool_id == 0) & (self.df_pen.refers_to_object_id !=0)]
-        self.df_pen.loc[:, 'visitor_drawn'] = (self.df_pen['tool_id'] != 0).astype(int)
+            # separate visitor-created items vs wall-tagged objects
+            self.df_visitorcreated = self.df_pen[self.df_pen.tool_id != 0]
+            self.df_wallobjects    = self.df_pen[(self.df_pen.tool_id == 0) & (self.df_pen.refers_to_object_id !=0)]
         # define some metrics
         self.metrics = {}
 
 ### Transformations/Feature Engineering
     def transform_raw_data(self):
-        pen_file = self.export_path  + "/pen-collected-items.csv"
+        filename = self.export_path  + "/pen_collected_items.csv"
         df = pd.read_csv(filename)
         # format timestamp into date/time and extract the number of days
-        df = self.format_times(df)
+        df = self._format_times(df)
         # extract time period date information
         df['month']   = pd.DatetimeIndex(df['created_dateformat_est']).month
         df['year' ]   = pd.DatetimeIndex(df['created_dateformat_est']).year
@@ -38,9 +36,13 @@ class Pen(object):
         df['weekend'] = (pd.DatetimeIndex(df['created_dateformat_est']).dayofweek > 4).astype(int)
         df['hour' ]   = pd.DatetimeIndex(df['created_dateformat_est']).hour
         df['quarter'] = pd.DatetimeIndex(df['created_dateformat_est']).quarter
-        # save the converted file to a csv
+        # create visitor vs wall records
+        df.loc[:, 'visitor_drawn'] = (df['tool_id'] != 0).astype(int)
+        # format and save the converted file to a csv
+        df.columns = [str(s.replace('.','_')) for s in df.columns.tolist()]
         df.to_csv(self.export_path    + "/pen_transformed_raw.csv")
         df.to_pickle(self.export_path + "/pen_transformed_raw.pkl")
+        return df
 
     def _format_times(self, df):
         '''reformat the datetimes for a given dataframe'''
@@ -121,9 +123,8 @@ class Pen(object):
     def create_temporal_features(self, df_meta):
         # re-format the times from the raw timestamp (based on utc)
         self.df_pen = self._format_times(df_meta)
-        self.df_pen.loc[:, 'visitor_drawn'] = (self.df_pen['tool_id'] != 0).astype(int)
         # from the tag pen samples, create a daily directed ordered sequence for a given bundle (visitor)
-        self._create_bundle_daily_sequences()
+        self.create_bundle_daily_sequences()
         # create burstiness feature based on anomaly detection as outliers
         self._create_burstiness_as_anomalies()
         # create temporal feature matrix
@@ -161,7 +162,7 @@ class Pen(object):
             ds_objectids.apply(lambda obj_id: self._tag_exhibition_check(obj_id, exhibition_id, df_exhibitions_in))
 
 ### Linked data
-    def _create_bundle_daily_sequences(self):
+    def create_bundle_daily_sequences(self):
         '''for a given daily journey, create a daily bundle sequence for a particular bundle'''
         # create daily sequences
         bundle_wall_objects_daily = self.df_wallobjects.groupby(['bundle_id', 'created_date_est'])
@@ -169,6 +170,9 @@ class Pen(object):
                                                                     ts in zip(frames['refers_to_object_id'],
                                                                               frames['created_dateformat_est'])}.items() ) )
         self.df_bundle_objsequences = self.df_bundle_sequences.apply(lambda seq: map(lambda tup: tup[1], seq))
+        self.df_bundle_sequences.to_pickle(self.export_path + "pen_bundle_journeys.pkl")
+        self.df_bundle_objsequences.to_pickle(self.export_path + "pen_bundle_obj_journeys.pkl")
+
 
     def _create_object_sequences(self):
         # from a given daily sequence visit, what are the connections
