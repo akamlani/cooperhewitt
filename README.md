@@ -5,7 +5,7 @@ an immersive experience for the visitor, whereby visitors would interact with th
 time "The Pen" was born which allowed the museum to track which artworks (objects) were being interacted with via
 recorded timestamps and artwork identifiers.  Visitors can tag artworks or create designs of their own at representative
 stations, which bring up similar artworks.  Recently all this information has been made openly available to the public,
-in de-identified bundles to protect the privacy of the visitors.
+noted as a de-identified bundle id to protect the privacy of the visitors.
 
 So why do visitors tag objects in the first place?  As part of the museum experience, all artwork visitors tag or create
 can be visited online via their account.  Therefore they have a vested interest in them tagging.
@@ -20,7 +20,6 @@ We will look at a few of the visitor behavior patterns:
 - the sequence in which visitors visit artworks in a given day
 - how often visitors tag within a given span (currently configured for 10m intervals)
 - Influential Artworks based on votes of importance (Directed Graph)
-- Are their groups of visitors attracted to exhibitions
 - Are similar artworks not part of an exhibition getting attention
 - Are certain Locations {Rooms, Spots, Floors} being visited and is their a pattern to them
 - Can visitors be classified into groups based on their tagging behavior and what they tag
@@ -53,6 +52,11 @@ Top Communities from Spark GraphX processing via plotting of iGraph.
 You can view an interactive diagram [here](https://plot.ly/~akamlani/89/artwork/), where hovering shows the type of art.
 -->
 
+## Libraries/Components
+- AWS: EC2, S3
+- Spark (pyspark):  Spark SQL, MLLib, GraphX/GraphFrames
+- Core Python Libraries: igraph, networkx, boto, pymongo, sklearn, pandas, numpy, seaborn/matplotlib  
+
 ## Cooper Hewitt Data Sources
 - [De-identified Pen Data](https://github.com/cooperhewitt/the-pen-data/)
     - The museum provides a digital pen to each visitor upon entry to tag artwork they are interested in.  
@@ -67,18 +71,6 @@ You can view an interactive diagram [here](https://plot.ly/~akamlani/89/artwork/
     tagged.  Included in this metadata, are the locations (rooms, spots) where artwork has appeared.
 
 
-## Configuration (API Keys)
-- Fill in the appropriate sections in config/api_cred.yml based on registration with Cooper Hewitt.
-
-## Data (Transformed)
-- collection_objects: Metadata about particular artworks and locations within the museum
-- pen_collected_items: De-identified Tracked Pen data for a particular visitor
-
-## Libraries/Components
-- AWS: EC2, S3
-- Spark (pyspark):  Spark SQL, MLLib, GraphX/GraphFrames
-- Core Python Libraries: igraph, networkx, boto, pymongo, sklearn, pandas, numpy, seaborn/matplotlib  
-
 ## Cooper Hewitt Resources
 - [Cooper Hewitt Labs](http://labs.cooperhewitt.org)
 - [Collection Stats](http://collection.cooperhewitt.org/stats)
@@ -87,4 +79,9 @@ You can view an interactive diagram [here](https://plot.ly/~akamlani/89/artwork/
     - [Happy Birthday for the Pen](http://labs.cooperhewitt.org/2016/a-very-happy-open-birthday-for-the-pen/)
 
 ## Additional Resources
-- [Hierarchical Clustering](https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/)
+- Hierarchical Clustering
+    - https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/
+- Apache Spark GraphFrames
+    - http://graphframes.github.io/
+    - https://databricks.com/blog/2016/03/03/introducing-graphframes.html
+    - https://developer.ibm.com/clouddataservices/2016/07/15/intro-to-apache-spark-graphframes/

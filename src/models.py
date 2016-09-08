@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy as np
 import pandas as pd
+import os
 
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
@@ -61,7 +62,7 @@ def execute_PCA(features, n_comp):
     # The entries in explained_variance_ratio_ correspond to the rows of components_
     return pca, X_pca
 
-def scree_plot(pca_model):
+def scree_plot(pca_model, filename):
     nrows, ncols = (1,2)
     plt_size = (16,5)
     fig, (ax1,ax2) = plt.subplots(nrows, ncols, figsize=plt_size)
@@ -79,7 +80,7 @@ def scree_plot(pca_model):
     ax2.set_ylabel("Variance Explained (%)", fontsize=12)
     # common title
     plt.suptitle("Scree Plot", fontsize=16)
-    fig.savefig('../plots/scree_plot.png', dpi=100, bbox_inches="tight")
+    fig.savefig(filename, dpi=100, bbox_inches="tight")
 
 def evaluate_clustering(features):
     Silhouettes, SSEs = [], []
@@ -140,19 +141,11 @@ def plot_clusters(df_features):
     plt.scatter(x=features_pca[:,0], y=features_pca[:,1], c=km.labels_)
     plt.plot(centroids[:,0],centroids[:,1],'sg',markersize=8)
 
-### correlations
-def calc_correlations(frame, threshold, cols, target):
-    # find the most given correlations for a given target on a subset of columns
-    df_corr = frame.corr(method='pearson')[target].sort_values(ascending=False)
-    df_tier_cols = list(df_corr[df_corr > threshold].index)
-    cols = list( set(cols + df_tier_cols) )
-    df_subset_corr = frame[cols].corr(method='pearson')
-    return df_subset_corr
-
 ### hierarchical_clustering
-def execute_hierarchical_clustering(data):
+def execute_hierarchical_clustering(data, metric_type='cityblock'):
     # Begin Hiearchial Clustering
-    distxy = squareform(pdist(data, metric='cityblock'))
+    # Previous Coph Metric Comparison: {cosine: 0.72, cityblock: 0.723, hamming: 0.719, jaccard: 0.699}
+    distxy = squareform(pdist(data, metric=metric_type))
     Z = linkage(distxy, method='complete')
     cutoff = 0.6*max(Z[:,2])
     c, coph_dists = cophenet(Z, pdist(data))
@@ -187,15 +180,18 @@ def plot_dendrogram(Z, cutoff, filename):
                     tick.label.set_fontweight('bold')
     fig.savefig(filename, dpi=100, bbox_inches="tight")
 
-def debug_clusters(frame, col='during_exhibition'):
-    # look at the correlation across each cluster to a given target column
-    export_path = "./../export/"
-    tr = utils.Transforms()
-    rooms_table = pd.read_pickle(export_path + "rooms_table.pkl")
-    cluster_labels = sorted(frame.cluster.unique())
-    for label in (cluster_labels):
-        sliced = frame[frame.cluster == label]
-        sliced = sliced.rename(columns=tr.rename_rooms(sliced, rooms_table)[1])
-        print "Cluster Label:{0}, Pct Sample Obs:{1}".format(label, sliced.shape[0]/frame.shape[0] )
-        print sliced.corr()[col].sort_values(ascending=False)[:10]
-        print
+
+
+
+if __name__ == "__main__":
+    # evaluate clustering via K-Means (wo/PCA)
+    # initially via sklearn, not spark, but we learned that the model does not perform well anyways
+    Silhouettes, SSEs = execute_clustering(df_features, 30)
+    plot_cluster_metrics(Silhouettes, SSEs)
+
+    # evaluate clustering via K-Means (w/PCA)
+    # initially via sklearn, not spark, but we learned that the model does not perform well anyways
+    # K-Means does not work well for Categorical data!!!
+    # There is no way we can extract this many clusters!!!
+    Silhouettes, SSEs = execute_clustering(features_pca, 30)
+    plot_cluster_metrics(Silhouettes, SSEs)
