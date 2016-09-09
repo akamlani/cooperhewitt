@@ -58,7 +58,8 @@ You can view an interactive diagram [here](https://plot.ly/~akamlani/89/artwork/
 ## Libraries/Components
 - AWS: EC2, S3
 - Spark (pyspark):  Spark SQL, MLLib, GraphX/GraphFrames
-- Core Python Libraries: igraph, networkx, boto, pymongo, sklearn, pandas, numpy, seaborn/matplotlib  
+- Core Python Libraries: igraph, networkx, boto, pymongo, sklearn, scipy, pandas, numpy
+- Visualization Libraries: plotly, seaborn, matplotlib
 
 ## Cooper Hewitt Data Sources
 - [De-identified Pen Data](https://github.com/cooperhewitt/the-pen-data/)
