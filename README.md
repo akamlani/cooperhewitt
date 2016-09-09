@@ -31,6 +31,9 @@ can be further improved by understanding the visitor patterns.
 
 For a further breakdown please review the [slide deck](docs/CooperHewitt.pdf).
 
+## Installation/Configuration
+- Reference the [Installation and Configuration Notes](INSTALLATION.md)
+
 ## Exploratory Analysis
 Lets take a quick peak of how the pen is being used and some of the metadata about Cooper Hewitt.
 <p align="center">
