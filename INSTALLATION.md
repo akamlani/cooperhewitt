@@ -1,20 +1,28 @@
 ```
 Define environment variables in ~/.bash_profile or ~/.bashrc
-- Root directory where this is cloned: COOPERHEWITT_ROOT
+- Root directory where this is cloned: COOPERHEWITT_ROOT, PYTONPATH
+    //example paths
+    export COOPERHEWITT_ROOT=${HOME}/Projects/datascience/cooperhewitt
+    export PYTHONPATH=${COOPERHEWITT_ROOT}/src:$PYTHONPATH
 - Environment Installations: SPARK_HOME, JAVA_HOME, PYTHONPATH
+    //example paths
+    export JAVA_HOME=$(/usr/libexec/java_home)
+    export SPARK_HOME=/opt/spark-1.6.2-bin-hadoop2.6/
+    export PYTHONPATH=/opt/spark-1.6.2-bin-hadoop2.6/python/:$PYTHONPATH
+    export PYTHONPATH=/usr/local/lib/python2.7/site-packages/:$PYTHONPATH
 - S3 Access Keys (if using serialized *.pkl files): AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 ```
 
 ```
 Acquire serialized files:
-- Execute the following script: aws.py
+- Execute the following script: src/apps/aws.py
   Note this requires AWS S3 keys to be set, as it will request from the existing bucket
 ```
 
 ```
 Registration Configuration (per API Keys of Cooper Hewitt)
 - Fill in the sections in config/api_cred_template.yml based on registration with Cooper Hewitt
-- Rename the file to api_cred.yml and place in config folder
+- Rename the file to config/api_cred.yml
 - In most places, serialized files are already built, so this is not required
 ```
 
@@ -26,11 +34,10 @@ Mongodb
 
 ```python
 # setup environment (ideally this would be placed in the ipython profile)
-# only required for src/{notebooks, apps} folders
+# ONLY required if haven't set PYTHONPATH environment variable correctly
 import os
 import sys
 sys.path.append(os.environ['COOPERHEWITT_ROOT'] + '/src')
-sys.path.append(os.environ['COOPERHEWITT_ROOT'] + '/src/apps')
 ```
 
 ```

@@ -9,7 +9,6 @@ from sklearn.preprocessing import scale
 ### Semantics/Metrics Engine
 def explore_clusters_corr(frame, col):
     # look at the correlation across each cluster to a given target column
-    tr = utils.Transforms()
     export_path = os.environ['COOPERHEWITT_ROOT'] + "/export/"
     rooms_table = pd.read_pickle(export_path + "rooms_table.pkl")
     cluster_labels = sorted(frame.cluster.unique())
@@ -25,7 +24,7 @@ def explore_clusters_corr(frame, col):
     # find the correlations to the given column within a given cluster
     for label, pct in sorted_pct_clusters:
         sliced = frame[frame.cluster == label]
-        sliced = sliced.rename(columns=tr.rename_rooms(sliced, rooms_table)[1])
+        sliced = sliced.rename(columns=utils.rename_rooms(sliced, rooms_table)[1])
         cluster_correlations  = (sliced.corr()[col].sort_values(ascending=False)[:10])
         print "Cluster Label:{0}, Pct Sample Obs:{1}".format(label, sliced.shape[0]/frame.shape[0] )
         print sorted(dict(cluster_correlations).items(), key=lambda x: x[1], reverse=True); print
@@ -33,10 +32,9 @@ def explore_clusters_corr(frame, col):
 def explore_cluster_features(frame, scale_option=False, k=10):
     # not required to scale as we are dealing with all categorical/binary features
     # here we perform an estimation based on z-score for each cluster
-    tr = utils.Transforms()
     export_path = os.environ['COOPERHEWITT_ROOT'] + "/export/"
     rooms_table = pd.read_pickle(export_path + "rooms_table.pkl")
-    frame       = frame.rename(columns=tr.rename_rooms(frame, rooms_table)[1])
+    frame       = frame.rename(columns=utils.rename_rooms(frame, rooms_table)[1])
 
     cluster_map = {}
     features = frame.drop('cluster', axis=1)

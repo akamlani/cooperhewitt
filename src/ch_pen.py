@@ -9,10 +9,9 @@ import numpy as np
 
 class Pen(object):
     def __init__(self):
-        root_path = os.environ['COOPERHEWITT_ROOT']
-        self.export_path = root_path + "/export/"
+        self.root_path = os.environ['COOPERHEWITT_ROOT']
+        self.export_path = self.root_path + "/export/"
         self.db_query  = databases.Database()
-        self.tr        = utils.Transforms()
         if os.path.exists(self.export_path + "pen_transformed_features.pkl"):
             self.df_pen = pd.read_pickle(self.export_path + "pen_transformed_features.pkl")
             # separate visitor-created items vs wall-tagged objects
@@ -23,7 +22,7 @@ class Pen(object):
 
 ### Transformations/Feature Engineering
     def transform_raw_data(self):
-        filename = self.export_path  + "/pen_collected_items.csv"
+        filename = self.root_path + "/data/pen_collected_items.csv"
         df = pd.read_csv(filename)
         # format timestamp into date/time and extract the number of days
         df = self._format_times(df)
@@ -77,7 +76,7 @@ class Pen(object):
         event_cols = ['tagged_after_close', 'during_exhibition', 'visitor_drawn', 'meta_store', 'bursty', 'n_obs', 'n_anomalies']
         location_cols = ['room_floor', 'room_id', 'room_count_objects', 'room_count_spots', 'spot_id', 'spot_count_objects']
         cols = date_cols + event_cols + location_cols
-        self.df_pen_meta_sub = self.tr.imputate(self.df_pen_meta[cols])
+        self.df_pen_meta_sub = utils.imputate(self.df_pen_meta[cols])
         self.df_pen_meta_sub.loc[:, location_cols] = self.df_pen_meta_sub[location_cols].astype(int)
         # create timeframe features
         frame = self.df_pen_meta_sub

@@ -103,8 +103,3 @@ class Display(object):
         for tick in plt.gca().yaxis.get_major_ticks(): tick.label.set_fontsize(14)
         rcParams.update({'figure.autolayout': True})
         fig.savefig(filename, dpi=400)
-
-
-
-# sns.palplot(sns.color_palette())
-# https://stanford.edu/~mwaskom/software/seaborn/tutorial/color_palettes.html#palette-tutorial

@@ -11,9 +11,7 @@ class MetaObjectStore(object):
     def __init__(self):
         root_path = os.environ['COOPERHEWITT_ROOT']
         self.export_path = root_path + "/export/"
-        self.tr = utils.Transforms()
         self.db = databases.Database()
-        self.util = utils.Utils()
         self.museum = chc.Museum()
 
         files = ["departments.pkl", "temporal_locations.pkl", "temporal_exhibitions.pkl",
@@ -85,7 +83,7 @@ class MetaObjectStore(object):
 
     def _build_temporal_lookups(self):
         # acquire descriptions of rooms [id, room_name, floor, room_count_objects, count_spots, description]
-        self.df_site_spots['room_name'] = self.df_site_spots.apply(self.tr.extract_roomname, axis=1)
+        self.df_site_spots['room_name'] = self.df_site_spots.apply(utils.extract_roomname, axis=1)
         df_rooms = self.df_site_rooms.rename(columns={'count_objects': 'room_count_objects'})
         df_rooms.id = df_rooms.id.astype(int)
         df_rooms['description'] = df_rooms.apply(lambda row: \
@@ -109,9 +107,9 @@ class MetaObjectStore(object):
     def _clean_temporal_data(self):
         # location data has temporal data that is duplicated and should not be existent
         items = ['visit_date', 'spot.room_id', 'spot.id']
-        df_loc = self.tr.transform_locations(self.df_objects)
+        df_loc = utils.transform_locations(self.df_objects)
         df_objid_dup = pd.Series(df_loc[df_loc.refers_to_object_id.duplicated()==1]['refers_to_object_id'].unique())
-        df_cleaned = df_objid_dup.apply(lambda x: self.util.clean_duplicates(x, df_loc, items))
+        df_cleaned = df_objid_dup.apply(lambda x: utils.clean_duplicates(x, df_loc, items))
         indices_duplicated = reduce(lambda x,y: x+y, df_cleaned)
         df_loc_cleaned = df_loc.drop(indices_duplicated, axis=0).reset_index()
         df_loc_cleaned = df_loc_cleaned.drop('index', axis=1)

@@ -32,8 +32,6 @@ if __name__ == "__main__":
     #dsp  = plots.Display()
     pen  = chp.Pen()
     meta = chm.MetaObjectStore()
-    df_associate_rooms = meta.debug_topk_room_types()
-    display(df_associate_rooms)
 
     ### Graph Frames
     sgf = cgf.SparkGraphFrames(sc)

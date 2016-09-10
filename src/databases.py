@@ -7,9 +7,11 @@ class Database(object):
         self.client = MongoClient()
         self.db     = self.client.cooperhewitt
         self.coll_exhibitions = self.db.exhibitions
-    
+
     def insert_records(self, records, name):
         if name == "exhibition":
+            # drop all records for a new record sequence beforehand
+            self.coll_exhibitions.drop()
             self.coll_exhibitions.insert_many(records)
 
     def query_records(self, name, query_id):

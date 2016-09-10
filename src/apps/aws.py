@@ -28,6 +28,14 @@ class AwsConn(object):
             print export_path, path_name + resource_file,  key
             with open(export_path, 'wb') as f: key.get_contents_to_file(f)
 
+    def get_public_dns(self, instance_name = 'spark_cluster-master'):
+        reservations = self.conn.get_all_instances()
+        instances = [inst for res in reservations for inst in res.instances]
+        name_dns_mapping = [{'name': inst.__dict__['tags']['Name'], 'public_dns': inst.__dict__['public_dns_name']}
+        for inst in instances if instance_name in inst.__dict__['tags']['Name'] ][0]
+        return name_dns_mapping
+
+
 
 if __name__ == '__main__':
     path_name    = 'projects/cooper-hewitt/data/'
@@ -36,3 +44,7 @@ if __name__ == '__main__':
     conn = AwsConn()
     filenames = [filename.replace(path_name, '') for filename in conn.acquire_files(path_name)]
     [conn.create_resource(bucket_name, path_name, filename) for filename in filenames]
+    # log the public dns url 
+    dns_mapping = conn.get_public_dns()
+    url = 'spark://' + str(dns_mapping['public_dns']) + ':7077'
+    print url

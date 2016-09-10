@@ -2,13 +2,8 @@ import os
 import sys
 import pandas as pd
 
-# setup profile environment
-sys.path.append(os.environ['COOPERHEWITT_ROOT'] + '/src')
-sys.path.append(os.environ['COOPERHEWITT_ROOT'] + '/src/apps')
-
 import ch_pen as chp
 import ch_metaobjects as chm
-
 
 if __name__ == "__main__":
     root_path = os.environ['COOPERHEWITT_ROOT']
@@ -30,8 +25,3 @@ if __name__ == "__main__":
 
     # A. at this point we can initiate graph analysis (src/notebooks/graphs.ipynb)
     # B. at this point we need to perform spark transformations (src/notebooks/sparktransformations.ipynb) on the cluster
-
-
-    # now using the spark transformations, create temporal features
-    # df_temporal_meta = pd.read_pickle(export_path + 'penmeta_spark.pkl')
-    # pen.create_temporal_features(df_temporal_meta)
