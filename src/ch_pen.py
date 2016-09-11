@@ -189,7 +189,9 @@ class Pen(object):
 
 ### Available Metrics
     def calc_metrics(self, df_objects_in):
+        '''calculate metrics from the artwork metadata and temporal features'''
         frame = self.df_pen
+
         # metrics
         self.metrics = {}
         exhibitions             = frame.during_exhibition.value_counts()
@@ -202,6 +204,8 @@ class Pen(object):
         n_obj_meta_delta        = len( set(frame.refers_to_object_id.unique()) - set(df_objects_in.id.unique()) )
         # number of observations we have metadata for
         n_obs_meta_delta        = frame[frame.refers_to_object_id.isin(df_objects_in.id.unique())].shape[0]
+        n_afterhrs_tags         = n_tag_obs - n_obs_meta_delta
+
         # average daily activity on a bundle
         df_bundleid_scans_perday = frame.groupby(['bundle_id', 'created_date_est'], sort=True).size()
         df_bundleid_scans_perday = df_bundleid_scans_perday.reset_index()
@@ -213,10 +217,11 @@ class Pen(object):
         df_bundleid_scans_perhr = df_bundleid_scans_perhr.rename(columns={0: 'scans_per_hr'})
         n_dailyhr_avgscans       = int(df_bundleid_scans_perhr['scans_per_hr'].mean())
 
+
         self.metrics = {'n_wall_objects_tagged': n_wallobjects_tagged, 'n_visitor_objects_tagged': n_visitorobjects_tagged}
         self.metrics.update({'n_unique_wallobjects': n_wallobjects_unique, 'n_unique_bundles': n_bundles_unique,
                              'n_tags': n_tag_obs, 'n_objects_meta_delta': n_obj_meta_delta,
-                             'nobs_meta_delta': n_obs_meta_delta})
+                             'nobs_meta_delta': n_obs_meta_delta, 'n_afterhrs_tags': n_afterhrs_tags})
         self.metrics.update({'n_during_exhibition_tags': exhibitions[1], 'n_nonexhibition_tags': exhibitions[0]})
         self.metrics.update({'n_avgdaily_tags': n_daily_avgscans, 'n_avgdailyhr_tags': n_dailyhr_avgscans})
         return self.metrics
